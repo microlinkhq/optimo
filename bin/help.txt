@@ -1,0 +1,10 @@
+Usage
+  $ optimo <file> [options]
+
+Options
+  -d, --dry-run  Show what would be optimized without making changes
+
+Examples
+  $ optimo image.jpg
+  $ optimo image.png --dry-run
+  $ optimo image.jpg -d

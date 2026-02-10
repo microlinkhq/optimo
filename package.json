@@ -1,0 +1,95 @@
+{
+  "name": "optimo",
+  "description": "The no-brainer ImageMagick CLI for optimizing images",
+  "homepage": "https://github.com/kikobeats/optimo",
+  "version": "0.0.0",
+  "bin": {
+    "optimo": "bin/index.js"
+  },
+  "author": {
+    "email": "josefrancisco.verdu@gmail.com",
+    "name": "Kiko Beats",
+    "url": "https://kikobeats.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kikobeats/optimo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kikobeats/optimo/issues"
+  },
+  "keywords": [
+    "image",
+    "image-optimization",
+    "image-optimizer",
+    "imagemagick",
+    "images",
+    "optimization",
+    "optimize"
+  ],
+  "dependencies": {
+    "mri": "~1.2.0",
+    "tinyspawn": "~1.5.5"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "latest",
+    "@commitlint/config-conventional": "latest",
+    "@ksmithut/prettier-standard": "latest",
+    "ava": "latest",
+    "c8": "latest",
+    "finepack": "latest",
+    "git-authors-cli": "latest",
+    "github-generate-release": "latest",
+    "nano-staged": "latest",
+    "simple-git-hooks": "latest",
+    "standard": "latest",
+    "standard-markdown": "latest",
+    "standard-version": "latest"
+  },
+  "engines": {
+    "node": ">= 24"
+  },
+  "scripts": {
+    "clean": "rm -rf node_modules",
+    "contributors": "(npx git-authors-cli && npx finepack && git add package.json && git commit -m 'build: contributors' --no-verify) || true",
+    "coverage": "c8 report --reporter=text-lcov > coverage/lcov.info",
+    "lint": "standard-markdown README.md && standard",
+    "postrelease": "pnpm release:tags && pnpm release:github && pnpm publish",
+    "pretest": "pnpm lint",
+    "release": "standard-version -a",
+    "release:github": "github-generate-release",
+    "release:tags": "git push --follow-tags origin HEAD:master",
+    "test": "c8 ava"
+  },
+  "preferGlobal": true,
+  "license": "MIT",
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ],
+    "rules": {
+      "body-max-line-length": [
+        0
+      ]
+    }
+  },
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "nano-staged": {
+    "*.js": [
+      "prettier-standard",
+      "standard --fix"
+    ],
+    "*.md": [
+      "standard-markdown"
+    ],
+    "package.json": [
+      "finepack"
+    ]
+  },
+  "simple-git-hooks": {
+    "commit-msg": "npx commitlint --edit",
+    "pre-commit": "npx nano-staged"
+  }
+}
