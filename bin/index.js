@@ -32,20 +32,10 @@ async function main () {
   const logger = argv.silent ? () => {} : logEntry => console.log(logEntry)
   !argv.silent && console.log()
 
-  const result = await fn(input, {
+  await fn(input, {
     dryRun: argv['dry-run'],
     onLogs: logger
   })
-
-  if (isDirectory && !argv.silent && result.savings > 0) {
-    const percentage = ((result.savings / result.originalSize) * 100).toFixed(1)
-    logger()
-    logger(
-      `${formatBytes(result.originalSize)} → ${formatBytes(
-        result.optimizedSize
-      )} (-${percentage}%)`
-    )
-  }
 
   process.exit(0)
 }
