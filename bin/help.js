@@ -2,7 +2,7 @@
 
 const { gray, blue } = require('../src/colors')
 
-module.exports = gray(`Efortless image optimize
+module.exports = gray(`Efortless image optimizer
 
 Usage
   $ ${blue('optimo')} <file|dir> [options]
