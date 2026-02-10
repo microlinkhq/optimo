@@ -120,6 +120,24 @@ const magickPath = (() => {
 const percentage = (partial, total) =>
   (((partial - total) / total) * 100).toFixed(1)
 
+const normalizeFormat = format => {
+  if (!format) return null
+
+  const normalized = String(format).trim().toLowerCase().replace(/^\./, '')
+  if (normalized === 'jpg') return 'jpeg'
+  if (normalized === 'tif') return 'tiff'
+
+  return normalized
+}
+
+const getOutputPath = (filePath, format) => {
+  const normalizedFormat = normalizeFormat(format)
+  if (!normalizedFormat) return filePath
+
+  const parsed = path.parse(filePath)
+  return path.join(parsed.dir, `${parsed.name}.${normalizedFormat}`)
+}
+
 const getMagickFlags = filePath => {
   const ext = path.extname(filePath).toLowerCase()
   if (ext === '.jpg' || ext === '.jpeg') return MAGICK_JPEG_FLAGS
@@ -133,13 +151,18 @@ const getMagickFlags = filePath => {
   return MAGICK_GENERIC_FLAGS
 }
 
-const file = async (filePath, { onLogs = () => {}, dryRun } = {}) => {
+const file = async (
+  filePath,
+  { onLogs = () => {}, dryRun, format: outputFormat } = {}
+) => {
   if (!magickPath) {
     throw new Error('ImageMagick is not installed')
   }
-  const flags = getMagickFlags(filePath)
+  const outputPath = getOutputPath(filePath, outputFormat)
+  const flags = getMagickFlags(outputPath)
 
-  const optimizedPath = `${filePath}.optimized`
+  const optimizedPath = `${outputPath}.optimized`
+  const isConverting = outputPath !== filePath
 
   let originalSize
   try {
@@ -154,7 +177,7 @@ const file = async (filePath, { onLogs = () => {}, dryRun } = {}) => {
 
   const optimizedSize = (await stat(optimizedPath)).size
 
-  if (optimizedSize >= originalSize) {
+  if (!isConverting && optimizedSize >= originalSize) {
     await unlink(optimizedPath)
     onLogs(formatLog('[optimized]', gray, filePath))
     return { originalSize, optimizedSize: originalSize }
@@ -163,12 +186,29 @@ const file = async (filePath, { onLogs = () => {}, dryRun } = {}) => {
   if (dryRun) {
     await unlink(optimizedPath)
   } else {
-    await unlink(filePath)
-    await rename(optimizedPath, filePath)
+    if (isConverting) {
+      try {
+        await unlink(outputPath)
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error
+      }
+    } else {
+      await unlink(filePath)
+    }
+
+    await rename(optimizedPath, outputPath)
+
+    if (isConverting) {
+      await unlink(filePath)
+    }
   }
 
   onLogs(
-    formatLog(`[${percentage(optimizedSize, originalSize)}%]`, green, filePath)
+    formatLog(
+      `[${percentage(optimizedSize, originalSize)}%]`,
+      green,
+      isConverting ? `${filePath} -> ${outputPath}` : filePath
+    )
   )
 
   return { originalSize, optimizedSize }

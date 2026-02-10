@@ -12,7 +12,9 @@ const red = str => styleText('red', str)
 
 const yellow = str => styleText('yellow', str)
 
+const blue = str => styleText('blue', str)
+
 const label = (text, color) =>
   styleText(['inverse', 'bold', color], ` ${text.toUpperCase()} `)
 
-module.exports = { gray, white, green, red, yellow, label }
+module.exports = { gray, white, green, red, yellow, label, blue }

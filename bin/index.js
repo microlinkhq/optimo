@@ -3,17 +3,15 @@
 
 const { stat } = require('node:fs/promises')
 const optimo = require('optimo')
-const path = require('node:path')
-const fs = require('node:fs')
 const mri = require('mri')
 
-const { formatBytes } = require('../src/util')
 const colors = require('../src/colors')
 
 async function main () {
   const argv = mri(process.argv.slice(2), {
     alias: {
       'dry-run': 'd',
+      format: 'f',
       silent: 's'
     }
   })
@@ -21,7 +19,7 @@ async function main () {
   const input = argv._[0]
 
   if (!input) {
-    console.log(fs.readFileSync(path.join(__dirname, 'help.txt'), 'utf8'))
+    console.log(require('./help'))
     process.exit(0)
   }
 
@@ -34,6 +32,7 @@ async function main () {
 
   await fn(input, {
     dryRun: argv['dry-run'],
+    format: argv.format,
     onLogs: logger
   })
 

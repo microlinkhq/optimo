@@ -15,6 +15,7 @@
 ```bash
 npx -y optimo public/media            # for a directory
 npx -y optimo public/media/banner.png # for a file
+npx -y optimo public/media/banner.png -f jpeg # convert + optimize
 ```
 
 ## Optimization Strategy
@@ -32,6 +33,7 @@ const optimo = require('optimo')
 // optimize a single file
 await optimo.file('/absolute/path/image.jpg', {
   dryRun: false,
+  format: 'webp',
   onLogs: console.log
 })
 
