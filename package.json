@@ -37,13 +37,13 @@
     "@ksmithut/prettier-standard": "latest",
     "ava": "latest",
     "c8": "latest",
+    "conventional-changelog-cli": "latest",
     "finepack": "latest",
     "git-authors-cli": "latest",
     "github-generate-release": "latest",
     "nano-staged": "latest",
     "simple-git-hooks": "latest",
     "standard": "latest",
-    "standard-markdown": "latest",
     "standard-version": "latest"
   },
   "engines": {
@@ -51,15 +51,19 @@
   },
   "scripts": {
     "clean": "rm -rf node_modules",
-    "contributors": "(npx git-authors-cli && npx finepack && git add package.json && git commit -m 'build: contributors' --no-verify) || true",
+    "contributors": "(git-authors-cli && finepack && git add package.json && git commit -m 'build: contributors' --no-verify) || true",
     "coverage": "c8 report --reporter=text-lcov > coverage/lcov.info",
     "lint": "standard-markdown README.md && standard",
-    "postrelease": "pnpm release:tags && pnpm release:github && pnpm publish",
+    "postrelease": "pnpm release:tags && pnpm release:github && pnpm publish --access=public",
     "pretest": "pnpm lint",
-    "release": "standard-version -a",
+    "release": "pnpm release:version && pnpm release:changelog && pnpm release:commit && pnpm release:tag",
     "release:github": "github-generate-release",
-    "release:tags": "git push --follow-tags origin HEAD:master",
-    "test": "c8 ava"
+    "release:tags": "git push origin HEAD:master --follow-tags",
+    "test": "c8 ava",
+    "release:changelog": "conventional-changelog -p conventionalcommits -i CHANGELOG.md -s",
+    "release:commit": "git add package.json CHANGELOG.md && git commit -m \"chore(release): $(node -p \"require('./package.json').version\")\"",
+    "release:tag": "git tag -a v$(node -p \"require('./package.json').version\") -m \"v$(node -p \"require('./package.json').version\")\"",
+    "release:version": "standard-version --skip.changelog --skip.commit --skip.tag"
   },
   "preferGlobal": true,
   "license": "MIT",
@@ -80,9 +84,6 @@
     "*.js": [
       "prettier-standard",
       "standard --fix"
-    ],
-    "*.md": [
-      "standard-markdown"
     ],
     "package.json": [
       "finepack"
