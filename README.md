@@ -1,4 +1,13 @@
-# optimo
+<div align="center">
+  <br>
+  <img style="width: 500px; margin:3rem 0 1.5rem;" src="https://github.com/Kikobeats/optimo/raw/master/media/banner.jpg" alt="optimo">
+  <br><br>
+  <a href="https://microlink.io"><img src="https://img.shields.io/badge/powered_by-microlink.io-blue?style=flat-square&color=%23EA407B" alt="Powered by microlink.io"></a>
+  <img alt="Last version" src="https://img.shields.io/github/tag/kikobeats/optimo.svg?style=flat-square">
+  <a href="https://coveralls.io/github/kikobeats/optimo"><img alt="Coverage Status" src="https://img.shields.io/coveralls/kikobeats/optimo.svg?style=flat-square"></a>
+  <a href="https://www.npmjs.org/package/optimo"><img alt="NPM Status" src="https://img.shields.io/npm/dm/optimo.svg?style=flat-square"></a>
+  <br><br>
+</div>
 
 `optimo` is an ImageMagick-powered CLI for aggressively reducing image file size with sane defaults.
 
