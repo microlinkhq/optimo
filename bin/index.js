@@ -26,8 +26,8 @@ async function main () {
   }
 
   const stats = await stat(input)
-  const isFolder = stats.isDirectory()
-  const fn = isFolder ? optimo.folder : optimo.file
+  const isDirectory = stats.isDirectory()
+  const fn = isDirectory ? optimo.dir : optimo.file
 
   const logger = argv.silent ? () => {} : logEntry => console.log(logEntry)
   !argv.silent && console.log()
@@ -37,7 +37,7 @@ async function main () {
     onLogs: logger
   })
 
-  if (isFolder && !argv.silent && result.savings > 0) {
+  if (isDirectory && !argv.silent && result.savings > 0) {
     const percentage = ((result.savings / result.originalSize) * 100).toFixed(1)
     logger()
     logger(

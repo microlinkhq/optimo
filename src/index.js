@@ -47,12 +47,7 @@ const MAGICK_PNG_FLAGS = [
  * - Coalesce frames before layer optimization to maximize delta compression.
  * - OptimizePlus is more aggressive for animated GIF size reduction.
  */
-const MAGICK_GIF_FLAGS = [
-  '-strip',
-  '-coalesce',
-  '-layers',
-  'OptimizePlus'
-]
+const MAGICK_GIF_FLAGS = ['-strip', '-coalesce', '-layers', 'OptimizePlus']
 
 /*
  * WebP preset (compression-first):
@@ -96,29 +91,19 @@ const MAGICK_HEIC_FLAGS = [
  * JPEG XL preset (compression-first):
  * - Use max effort where supported.
  */
-const MAGICK_JXL_FLAGS = [
-  '-strip',
-  '-define',
-  'jxl:effort=9',
-  '-quality',
-  '75'
-]
+const MAGICK_JXL_FLAGS = ['-strip', '-define', 'jxl:effort=9', '-quality', '75']
 
 /*
  * SVG preset:
  * - Keep optimization minimal to avoid destructive transformations.
  */
-const MAGICK_SVG_FLAGS = [
-  '-strip'
-]
+const MAGICK_SVG_FLAGS = ['-strip']
 
 /*
  * Generic preset for any other format:
  * - Keep it broadly safe across decoders while still reducing size.
  */
-const MAGICK_GENERIC_FLAGS = [
-  '-strip'
-]
+const MAGICK_GENERIC_FLAGS = ['-strip']
 
 const magickPath = (() => {
   try {
@@ -171,7 +156,7 @@ const file = async (filePath, { onLogs = () => {}, dryRun } = {}) => {
 
   if (optimizedSize >= originalSize) {
     await unlink(optimizedPath)
-    onLogs(formatLog('[0.0%]', gray, filePath))
+    onLogs(formatLog('[optimized]', gray, filePath))
     return { originalSize, optimizedSize: originalSize }
   }
 
@@ -182,13 +167,17 @@ const file = async (filePath, { onLogs = () => {}, dryRun } = {}) => {
     await rename(optimizedPath, filePath)
   }
 
-  onLogs(formatLog(`[${percentage(optimizedSize, originalSize)}%]`, green, filePath))
+  onLogs(
+    formatLog(`[${percentage(optimizedSize, originalSize)}%]`, green, filePath)
+  )
 
   return { originalSize, optimizedSize }
 }
 
-const folder = async (folderPath, opts) => {
-  const items = await readdir(folderPath, { withFileTypes: true })
+const dir = async (folderPath, opts) => {
+  const items = (await readdir(folderPath, { withFileTypes: true })).filter(
+    item => !item.name.startsWith('.')
+  )
   let totalOriginalSize = 0
   let totalOptimizedSize = 0
 
@@ -196,7 +185,7 @@ const folder = async (folderPath, opts) => {
     const itemPath = path.join(folderPath, item.name)
 
     if (item.isDirectory()) {
-      const subResult = await folder(itemPath, opts)
+      const subResult = await dir(itemPath, opts)
       totalOriginalSize += subResult.originalSize
       totalOptimizedSize += subResult.optimizedSize
     } else {
@@ -214,5 +203,5 @@ const folder = async (folderPath, opts) => {
 }
 
 module.exports.file = file
-module.exports.folder = folder
+module.exports.dir = dir
 module.exports.formatBytes = formatBytes
