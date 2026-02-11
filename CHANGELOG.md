@@ -1,3 +1,8 @@
+## 0.0.9 (2026-02-11)
+
+### Bug Fixes
+
+* ci ([46df241](https://github.com/kikobeats/optimo/commit/46df2416897307d577c04f439371a5afd0f3ebb7))
 ## 0.0.8 (2026-02-11)
 ## [0.0.7](https://github.com/kikobeats/optimo/compare/v0.0.6...v0.0.7) (2026-02-11)
 ## [0.0.6](https://github.com/kikobeats/optimo/compare/v0.0.4...v0.0.6) (2026-02-11)
