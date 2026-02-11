@@ -62,7 +62,7 @@
     "contributors": "(git-authors-cli && finepack && git add package.json && git commit -m 'build: contributors' --no-verify) || true",
     "coverage": "c8 report --reporter=text-lcov > coverage/lcov.info",
     "lint": "standard-markdown README.md && standard",
-    "postrelease": "pnpm release:tags && pnpm release:github && pnpm publish --access=public",
+    "postrelease": "pnpm release:tags && pnpm publish --access=public",
     "pretest": "pnpm lint",
     "release": "pnpm release:version && pnpm release:changelog && pnpm release:commit && pnpm release:tag",
     "release:changelog": "conventional-changelog -p conventionalcommits -i CHANGELOG.md -s",
