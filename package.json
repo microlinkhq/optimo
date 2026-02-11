@@ -3,14 +3,18 @@
   "description": "The no-brainer ImageMagick CLI for optimizing images",
   "homepage": "https://github.com/kikobeats/optimo",
   "version": "0.0.4",
+  "exports": {
+    ".": "./src/index.js"
+  },
   "bin": {
     "optimo": "bin/index.js"
   },
   "author": {
-    "name": "Kiko Beats",
     "email": "josefrancisco.verdu@gmail.com",
+    "name": "Kiko Beats",
     "url": "https://kikobeats.com"
   },
+  "contributors": [],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kikobeats/optimo.git"
@@ -49,6 +53,10 @@
   "engines": {
     "node": ">= 24"
   },
+  "files": [
+    "bin",
+    "src"
+  ],
   "scripts": {
     "clean": "rm -rf node_modules",
     "contributors": "(git-authors-cli && finepack && git add package.json && git commit -m 'build: contributors' --no-verify) || true",
@@ -57,13 +65,13 @@
     "postrelease": "pnpm release:tags && pnpm release:github && pnpm publish --access=public",
     "pretest": "pnpm lint",
     "release": "pnpm release:version && pnpm release:changelog && pnpm release:commit && pnpm release:tag",
-    "release:github": "github-generate-release",
-    "release:tags": "git push origin HEAD:master --follow-tags",
-    "test": "c8 ava",
     "release:changelog": "conventional-changelog -p conventionalcommits -i CHANGELOG.md -s",
     "release:commit": "git add package.json CHANGELOG.md && git commit -m \"chore(release): $(node -p \"require('./package.json').version\")\"",
+    "release:github": "github-generate-release",
     "release:tag": "git tag -a v$(node -p \"require('./package.json').version\") -m \"v$(node -p \"require('./package.json').version\")\"",
-    "release:version": "standard-version --skip.changelog --skip.commit --skip.tag"
+    "release:tags": "git push origin HEAD:master --follow-tags",
+    "release:version": "standard-version --skip.changelog --skip.commit --skip.tag",
+    "test": "c8 ava"
   },
   "preferGlobal": true,
   "license": "MIT",
@@ -77,9 +85,6 @@
       ]
     }
   },
-  "exports": {
-    ".": "./src/index.js"
-  },
   "nano-staged": {
     "*.js": [
       "prettier-standard",
@@ -92,6 +97,5 @@
   "simple-git-hooks": {
     "commit-msg": "npx commitlint --edit",
     "pre-commit": "npx nano-staged"
-  },
-  "contributors": []
+  }
 }
