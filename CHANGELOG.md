@@ -1,3 +1,8 @@
+## 0.0.5 (2026-02-11)
+
+### Bug Fixes
+
+* add files meta field ([25f5a7e](https://github.com/kikobeats/optimo/commit/25f5a7edf0e540613ba67906a1eb5139baeccb3e))
 ## 0.0.4 (2026-02-10)
 ## 0.0.3 (2026-02-10)
 
