@@ -18,6 +18,18 @@ async function main () {
   })
 
   const input = argv._[0]
+  let resize = argv.resize
+
+  if (resize !== undefined && resize !== null) {
+    const unitToken = argv._[1]
+    if (
+      unitToken &&
+      /^[kmg]?b$/i.test(unitToken) &&
+      /^\d*\.?\d+$/.test(String(resize))
+    ) {
+      resize = `${resize}${unitToken}`
+    }
+  }
 
   if (!input) {
     console.log(require('./help'))
@@ -34,7 +46,7 @@ async function main () {
   await fn(input, {
     dryRun: argv['dry-run'],
     format: argv.format,
-    resize: argv.resize,
+    resize,
     onLogs: logger
   })
 
