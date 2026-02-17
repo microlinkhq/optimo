@@ -99,7 +99,6 @@ const file = async (
   }
   const outputPath = getOutputPath(filePath, outputFormat)
   const resizeConfig = parseResize(resize)
-  console.log('resizeConfig', resizeConfig)
   const flags = magickFlags(outputPath)
 
   const optimizedPath = `${outputPath}.optimized`
