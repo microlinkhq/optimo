@@ -10,9 +10,9 @@ const colors = require('../src/util/colors')
 async function main () {
   const argv = mri(process.argv.slice(2), {
     alias: {
-      'aggressive-compression': 'a',
       'dry-run': 'd',
       format: 'f',
+      losy: 'l',
       resize: 'r',
       silent: 's'
     }
@@ -45,7 +45,7 @@ async function main () {
   !argv.silent && console.log()
 
   await fn(input, {
-    aggressiveCompression: argv['aggressive-compression'],
+    losy: argv.losy,
     dryRun: argv['dry-run'],
     format: argv.format,
     resize,

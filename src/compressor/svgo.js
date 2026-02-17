@@ -72,8 +72,8 @@ const run = async ({ inputPath, outputPath, plugins }) => {
 
 const svg = withMeta(
   'svg',
-  async ({ inputPath, outputPath, aggressiveCompression = false }) => {
-    if (!aggressiveCompression) {
+  async ({ inputPath, outputPath, losy = false }) => {
+    if (!losy) {
       await run({ inputPath, outputPath, plugins: COMMON_PLUGINS })
       return
     }

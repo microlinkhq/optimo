@@ -6,43 +6,32 @@
   <img alt="Last version" src="https://img.shields.io/github/tag/kikobeats/optimo.svg?style=flat-square">
   <a href="https://www.npmjs.org/package/optimo"><img alt="NPM Status" src="https://img.shields.io/npm/dm/optimo.svg?style=flat-square"></a>
   <br><br>
+  optimo reduces image file size aggressively, and safely.
 </div>
 
-`optimo` is an CLI for aggressively reducing image file size with sane defaults.
+## Highlights
 
-## Install
+- Format-specific tuning for stronger size reduction.
+- Backed by proven tools: ImageMagick, SVGO, Gifsicle, and MozJPEG.
+- Safety guard: if optimized output is not smaller, original file is kept.
+- Resizing supports percentage values (`50%`), max file size targets (`100kB`), width (`w960`), & height (`h480`).
+
+## Usage
 
 ```bash
 npx -y optimo public/media            # for a directory
 npx -y optimo public/media/banner.png # for a file
-npx -y optimo public/media/banner.png -f jpeg # convert + optimize
-npx -y optimo public/media/banner.png -a # aggressive compression (lossy + lossless)
-npx -y optimo public/media/banner.png -r 50% # resize + optimize
-npx -y optimo public/media/banner.png -r 100kB # resize to max file size
-npx -y optimo public/media/banner.png -r w960 # resize to max width
-npx -y optimo public/media/banner.png -r h480 # resize to max height
+npx -y optimo public/media/banner.png --losy # enable lossy + lossless mode
+npx -y optimo public/media/banner.png --format jpeg # convert + optimize
+npx -y optimo public/media/banner.png --resize 50% # resize + optimize
+npx -y optimo public/media/banner.png --resize 100kB # resize to max file size
+npx -y optimo public/media/banner.png --resize w960 # resize to max width
+npx -y optimo public/media/banner.png --resize h480 # resize to max height
 ```
-
-## Highlights
-
-- Per-format compressor pipelines.
-- Compression-first defaults with safe file replacement.
-- Format-specific tuning for stronger size reduction.
-- Safety guard: if optimized output is not smaller, original file is kept.
-- Resizing supports percentage values (`50%`), max file size targets (`100kB`), width (`w960`), & height (`h480`).
-
-## Required Binaries
-
-`optimo` resolves compressors from your `PATH` and throws if a required binary for the target pipeline is missing.
-
-- `magick` for all ImageMagick-backed formats.
-- `svgo` for SVG optimization.
-- `mozjpegtran` or `jpegtran` for JPEG second-pass optimization.
-- `gifsicle` for GIF second-pass optimization.
 
 ## Pipelines
 
-`optimo` chooses the pipeline by output format:
+When `optimo` is executed, a pipeline of compressors is chosen based on the output file format:
 
 - `.png` -> `magick.png`
 - `.svg` -> `svgo.svg`
@@ -52,8 +41,17 @@ npx -y optimo public/media/banner.png -r h480 # resize to max height
 
 Mode behavior:
 
-- default: lossless-first pipeline (ImgBot-style default)
-- `-a, --aggressive-compression`: lossy + lossless pass per matching compressor
+- default: lossless-first pipeline.
+- `-l, --losy`: lossy + lossless pass per matching compressor.
+
+
+Example output:
+
+```
+✓ banner.jpg  1.2MB → 348kB  (-71%)
+```
+
+If the optimized file isn’t smaller, the original is kept.
 
 ## Programmatic API
 
@@ -63,7 +61,7 @@ const optimo = require('optimo')
 // optimize a single file
 await optimo.file('/absolute/path/image.jpg', {
   dryRun: false,
-  aggressiveCompression: false,
+  losy: false,
   format: 'webp',
   resize: '50%',
   onLogs: console.log

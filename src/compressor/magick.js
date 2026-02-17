@@ -83,12 +83,12 @@ const MAGICK_SVG_FLAGS = ['-strip']
 
 const MAGICK_GENERIC_FLAGS = ['-strip']
 
-const flagsByExt = ({ ext, aggressiveCompression = false }) => {
+const flagsByExt = ({ ext, losy = false }) => {
   if (ext === '.jpg' || ext === '.jpeg') {
-    return aggressiveCompression ? MAGICK_JPEG_LOSSY_FLAGS : MAGICK_JPEG_LOSSLESS_FLAGS
+    return losy ? MAGICK_JPEG_LOSSY_FLAGS : MAGICK_JPEG_LOSSLESS_FLAGS
   }
   if (ext === '.png') {
-    return aggressiveCompression ? MAGICK_PNG_LOSSY_FLAGS : MAGICK_PNG_LOSSLESS_FLAGS
+    return losy ? MAGICK_PNG_LOSSY_FLAGS : MAGICK_PNG_LOSSLESS_FLAGS
   }
   if (ext === '.gif') return MAGICK_GIF_FLAGS
   if (ext === '.webp') return MAGICK_WEBP_FLAGS
@@ -169,10 +169,10 @@ const runOnce = async ({
   inputPath,
   outputPath,
   resizeGeometry,
-  aggressiveCompression = false
+  losy = false
 }) => {
   const ext = path.extname(outputPath).toLowerCase()
-  const flags = flagsByExt({ ext, aggressiveCompression })
+  const flags = flagsByExt({ ext, losy })
 
   if (ext === '.png') {
     await writePng({ inputPath, outputPath, flags, resizeGeometry })
@@ -193,7 +193,7 @@ const runMaxSize = async ({
   inputPath,
   outputPath,
   maxSize,
-  aggressiveCompression = false
+  losy = false
 }) => {
   const resultByScale = new Map()
 
@@ -209,7 +209,7 @@ const runMaxSize = async ({
       inputPath,
       outputPath: candidatePath,
       resizeGeometry,
-      aggressiveCompression
+      losy
     })
 
     const size = (await stat(candidatePath)).size
@@ -264,24 +264,24 @@ const run = async ({
   inputPath,
   outputPath,
   resizeConfig,
-  aggressiveCompression = false
+  losy = false
 }) => {
   if (resizeConfig?.mode === 'max-size') {
     await runMaxSize({
       inputPath,
       outputPath,
       maxSize: resizeConfig.value,
-      aggressiveCompression
+      losy
     })
     return
   }
 
-  if (!aggressiveCompression) {
+  if (!losy) {
     await runOnce({
       inputPath,
       outputPath,
       resizeGeometry: resizeConfig?.value,
-      aggressiveCompression: false
+      losy: false
     })
     return
   }
@@ -292,12 +292,12 @@ const run = async ({
       inputPath,
       outputPath: lossyPath,
       resizeGeometry: resizeConfig?.value,
-      aggressiveCompression: true
+      losy: true
     })
     await runOnce({
       inputPath: lossyPath,
       outputPath,
-      aggressiveCompression: false
+      losy: false
     })
   } finally {
     try {

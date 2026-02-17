@@ -19,7 +19,7 @@ const runStepInPlaceIfSmaller = async ({ currentPath, extension, step }) => {
     inputPath: currentPath,
     outputPath: candidatePath,
     resizeConfig: null,
-    aggressiveCompression: false
+    losy: false
   })
 
   const [currentSize, candidateSize] = await Promise.all([
@@ -40,7 +40,7 @@ const executePipeline = async ({
   filePath,
   optimizedPath,
   resizeConfig,
-  aggressiveCompression
+  losy
 }) => {
   const extension = path.extname(optimizedPath) || '.tmp'
 
@@ -48,14 +48,14 @@ const executePipeline = async ({
     inputPath: filePath,
     outputPath: optimizedPath,
     resizeConfig,
-    aggressiveCompression
+    losy
   })
 
   for (const step of pipeline.slice(1)) {
     await runStepInPlaceIfSmaller({
       currentPath: optimizedPath,
       extension,
-      step: async args => step({ ...args, aggressiveCompression })
+      step: async args => step({ ...args, losy })
     })
   }
 
@@ -69,7 +69,7 @@ const file = async (
     dryRun,
     format: outputFormat,
     resize,
-    aggressiveCompression = false
+    losy = false
   } = {}
 ) => {
   const outputPath = getOutputPath(filePath, outputFormat)
@@ -92,7 +92,7 @@ const file = async (
 
   ensureBinaries(
     getRequiredBinaries(executionPipeline, {
-      aggressiveCompression
+      losy
     })
   )
 
@@ -114,7 +114,7 @@ const file = async (
         filePath,
         optimizedPath,
         resizeConfig,
-        aggressiveCompression
+        losy
       })
     }
   } catch {

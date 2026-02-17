@@ -25,8 +25,8 @@ const runLossy = async ({ inputPath, outputPath }) => {
 
 const gif = withMeta(
   'gif',
-  async ({ inputPath, outputPath, aggressiveCompression = false }) => {
-    if (!aggressiveCompression) {
+  async ({ inputPath, outputPath, losy = false }) => {
+    if (!losy) {
       await runLossless({ inputPath, outputPath })
       return
     }
