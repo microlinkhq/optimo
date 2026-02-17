@@ -2,7 +2,7 @@
   "name": "optimo",
   "description": "The no-brainer ImageMagick CLI for optimizing images",
   "homepage": "https://github.com/kikobeats/optimo",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "exports": {
     ".": "./src/index.js"
   },
