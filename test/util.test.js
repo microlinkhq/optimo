@@ -64,6 +64,22 @@ test('parseResize parses width and height resize values', t => {
   t.deepEqual(parseResize(' W1280 '), { mode: 'dimension', value: '1280x' })
 })
 
+test('parseResize throws on zero width or height resize values', t => {
+  const widthError = t.throws(() => parseResize('w0'))
+  t.true(widthError instanceof TypeError)
+  t.true(widthError.message.includes('width/height'))
+
+  const heightError = t.throws(() => parseResize('h0'))
+  t.true(heightError instanceof TypeError)
+  t.true(heightError.message.includes('width/height'))
+})
+
+test('parseResize throws on zero max-size resize values', t => {
+  const error = t.throws(() => parseResize('0kB'))
+  t.true(error instanceof TypeError)
+  t.true(error.message.includes('max size'))
+})
+
 test('parseResize throws on invalid input', t => {
   const error = t.throws(() => parseResize('invalid'))
   t.true(error instanceof TypeError)
