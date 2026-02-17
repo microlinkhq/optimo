@@ -12,8 +12,8 @@
 ## Highlights
 
 - Format-specific tuning for stronger size reduction.
-- Backed by proven tools: ImageMagick, SVGO, Gifsicle, and MozJPEG.
 - Safety guard: if optimized output is not smaller, original file is kept.
+- Backed by proven tools: ImageMagick, SVGO, Gifsicle, and MozJPEG.
 - Resizing supports percentage values (`50%`), max file size targets (`100kB`), width (`w960`), & height (`h480`).
 
 ## Usage

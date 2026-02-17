@@ -2,10 +2,10 @@
 
 const path = require('node:path')
 
+const mozjpegtran = require('./mozjpegtran')
+const gifsicle = require('./gifsicle')
 const magick = require('./magick')
 const svgo = require('./svgo')
-const gifsicle = require('./gifsicle')
-const mozjpegtran = require('./mozjpegtran')
 
 const PIPELINES = {
   '.png': [magick.png],
@@ -40,9 +40,7 @@ const getRequiredBinaries = (pipeline, opts = {}) => {
     })
   }
 
-  return Array.from(
-    new Map(binaries.map(binary => [binary.name, binary])).values()
-  )
+  return Array.from(new Map(binaries.map(binary => [binary.name, binary])).values())
 }
 
 module.exports = { getPipeline, getRequiredBinaries }
