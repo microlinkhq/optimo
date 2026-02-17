@@ -17,8 +17,8 @@ const withMeta = (format, fn) => {
   return wrapped
 }
 
-const run = async ({ inputPath, outputPath }) => {
-  await $(mozjpegtranPath, [
+const run = async ({ inputPath, outputPath }) =>
+  $(mozjpegtranPath, [
     '-copy',
     'none',
     '-optimize',
@@ -26,7 +26,6 @@ const run = async ({ inputPath, outputPath }) => {
     outputPath,
     inputPath
   ])
-}
 
 const jpg = withMeta('jpg', run)
 const jpeg = withMeta('jpeg', run)

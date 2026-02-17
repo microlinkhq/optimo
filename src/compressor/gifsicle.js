@@ -1,8 +1,8 @@
 'use strict'
 
 const { unlink } = require('node:fs/promises')
-
 const $ = require('tinyspawn')
+
 const resolveBinary = require('../util/resolve-binary')
 
 const binaryPath = resolveBinary('gifsicle')
@@ -15,36 +15,28 @@ const withMeta = (format, fn) => {
   return wrapped
 }
 
-const runLossless = async ({ inputPath, outputPath }) => {
-  await $(binaryPath, ['-O3', inputPath, '-o', outputPath])
-}
+const runLossless = async ({ inputPath, outputPath }) =>
+  $(binaryPath, ['-O3', inputPath, '-o', outputPath])
 
-const runLossy = async ({ inputPath, outputPath }) => {
-  await $(binaryPath, ['-O3', '--lossy=80', inputPath, '-o', outputPath])
-}
+const runLossy = async ({ inputPath, outputPath }) =>
+  $(binaryPath, ['-O3', '--lossy=80', inputPath, '-o', outputPath])
 
-const gif = withMeta(
-  'gif',
-  async ({ inputPath, outputPath, losy = false }) => {
-    if (!losy) {
-      await runLossless({ inputPath, outputPath })
-      return
-    }
+const gif = withMeta('gif', async ({ inputPath, outputPath, losy = false }) => {
+  if (!losy) return runLossless({ inputPath, outputPath })
 
-    const lossyPath = `${outputPath}.lossy.gif`
+  const lossyPath = `${outputPath}.lossy.gif`
+  try {
+    await runLossy({ inputPath, outputPath: lossyPath })
+    return runLossless({ inputPath: lossyPath, outputPath })
+  } finally {
     try {
-      await runLossy({ inputPath, outputPath: lossyPath })
-      await runLossless({ inputPath: lossyPath, outputPath })
-    } finally {
-      try {
-        await unlink(lossyPath)
-      } catch (error) {
-        if (error.code !== 'ENOENT') {
-          // Ignore cleanup failures.
-        }
+      await unlink(lossyPath)
+    } catch (error) {
+      if (error.code !== 'ENOENT') {
+        // Ignore cleanup failures.
       }
     }
   }
-)
+})
 
 module.exports = { binaryPath, gif }

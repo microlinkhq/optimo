@@ -2,10 +2,9 @@
 'use strict'
 
 const { stat } = require('node:fs/promises')
+const colors = require('../src/util/colors')
 const optimo = require('optimo')
 const mri = require('mri')
-
-const colors = require('../src/util/colors')
 
 async function main () {
   const argv = mri(process.argv.slice(2), {
@@ -14,7 +13,8 @@ async function main () {
       format: 'f',
       losy: 'l',
       resize: 'r',
-      silent: 's'
+      silent: 's',
+      verbose: 'v'
     }
   })
 
@@ -40,6 +40,12 @@ async function main () {
   const stats = await stat(input)
   const isDirectory = stats.isDirectory()
   const fn = isDirectory ? optimo.dir : optimo.file
+
+  if (argv.verbose) {
+    process.env.DEBUG = `${
+      process.env.DEBUG ? `${process.env.DEBUG},` : ''
+    }optimo*`
+  }
 
   const logger = argv.silent ? () => {} : logEntry => console.log(logEntry)
   !argv.silent && console.log()

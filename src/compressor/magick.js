@@ -1,10 +1,10 @@
 'use strict'
 
-const path = require('node:path')
 const { stat, rename, unlink } = require('node:fs/promises')
 const { execFileSync } = require('node:child_process')
-
+const path = require('node:path')
 const $ = require('tinyspawn')
+
 const resolveBinary = require('../util/resolve-binary')
 
 const binaryPath = resolveBinary('magick')
@@ -33,12 +33,7 @@ const MAGICK_JPEG_LOSSY_FLAGS = [
   'Plane'
 ]
 
-const MAGICK_JPEG_LOSSLESS_FLAGS = [
-  '-define',
-  'jpeg:optimize-coding=true',
-  '-interlace',
-  'Plane'
-]
+const MAGICK_JPEG_LOSSLESS_FLAGS = ['-define', 'jpeg:optimize-coding=true', '-interlace', 'Plane']
 
 const MAGICK_PNG_LOSSLESS_FLAGS = []
 const MAGICK_PNG_LOSSY_FLAGS = [
@@ -51,31 +46,11 @@ const MAGICK_PNG_LOSSY_FLAGS = [
 
 const MAGICK_GIF_FLAGS = ['-strip', '-coalesce', '-layers', 'OptimizePlus']
 
-const MAGICK_WEBP_FLAGS = [
-  '-strip',
-  '-define',
-  'webp:method=6',
-  '-define',
-  'webp:thread-level=1',
-  '-quality',
-  '80'
-]
+const MAGICK_WEBP_FLAGS = ['-strip', '-define', 'webp:method=6', '-define', 'webp:thread-level=1', '-quality', '80']
 
-const MAGICK_AVIF_FLAGS = [
-  '-strip',
-  '-define',
-  'heic:speed=1',
-  '-quality',
-  '50'
-]
+const MAGICK_AVIF_FLAGS = ['-strip', '-define', 'heic:speed=1', '-quality', '50']
 
-const MAGICK_HEIC_FLAGS = [
-  '-strip',
-  '-define',
-  'heic:speed=1',
-  '-quality',
-  '75'
-]
+const MAGICK_HEIC_FLAGS = ['-strip', '-quality', '75']
 
 const MAGICK_JXL_FLAGS = ['-strip', '-define', 'jxl:effort=9', '-quality', '75']
 
@@ -84,12 +59,8 @@ const MAGICK_SVG_FLAGS = ['-strip']
 const MAGICK_GENERIC_FLAGS = ['-strip']
 
 const flagsByExt = ({ ext, losy = false }) => {
-  if (ext === '.jpg' || ext === '.jpeg') {
-    return losy ? MAGICK_JPEG_LOSSY_FLAGS : MAGICK_JPEG_LOSSLESS_FLAGS
-  }
-  if (ext === '.png') {
-    return losy ? MAGICK_PNG_LOSSY_FLAGS : MAGICK_PNG_LOSSLESS_FLAGS
-  }
+  if (ext === '.jpg' || ext === '.jpeg') return losy ? MAGICK_JPEG_LOSSY_FLAGS : MAGICK_JPEG_LOSSLESS_FLAGS
+  if (ext === '.png') return losy ? MAGICK_PNG_LOSSY_FLAGS : MAGICK_PNG_LOSSLESS_FLAGS
   if (ext === '.gif') return MAGICK_GIF_FLAGS
   if (ext === '.webp') return MAGICK_WEBP_FLAGS
   if (ext === '.avif') return MAGICK_AVIF_FLAGS
@@ -99,28 +70,26 @@ const flagsByExt = ({ ext, losy = false }) => {
   return MAGICK_GENERIC_FLAGS
 }
 
-const isAnimatedPng = filePath => {
+const isAnimatedPng = ({ filePath }) => {
   try {
-    const frames = execFileSync(
-      binaryPath,
-      ['identify', '-format', '%n', filePath],
-      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }
-    )
+    const frames = execFileSync(binaryPath, ['identify', '-format', '%n', filePath], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore']
+    })
       .trim()
       .split(/\s+/)
       .map(value => Number.parseInt(value, 10))
       .find(value => Number.isFinite(value) && value > 0)
 
-    return (frames || 1) > 1
-  } catch {
+    const animated = (frames || 1) > 1
+    return animated
+  } catch (error) {
     return false
   }
 }
 
 const writePng = async ({ inputPath, outputPath, flags, resizeGeometry }) => {
-  const writeCandidates = isAnimatedPng(inputPath)
-    ? [90]
-    : PNG_QUALITY_CANDIDATES
+  const writeCandidates = isAnimatedPng({ filePath: inputPath }) ? [90] : PNG_QUALITY_CANDIDATES
   const candidatePaths = []
   let bestPath = null
   let bestSize = Number.POSITIVE_INFINITY
@@ -165,44 +134,24 @@ const writePng = async ({ inputPath, outputPath, flags, resizeGeometry }) => {
   }
 }
 
-const runOnce = async ({
-  inputPath,
-  outputPath,
-  resizeGeometry,
-  losy = false
-}) => {
+const runOnce = async ({ inputPath, outputPath, resizeGeometry, losy = false }) => {
   const ext = path.extname(outputPath).toLowerCase()
   const flags = flagsByExt({ ext, losy })
 
   if (ext === '.png') {
-    await writePng({ inputPath, outputPath, flags, resizeGeometry })
-    return
+    return writePng({ inputPath, outputPath, flags, resizeGeometry })
   }
 
-  const args = [
-    inputPath,
-    ...(resizeGeometry ? ['-resize', resizeGeometry] : []),
-    ...flags,
-    outputPath
-  ]
-
-  await $(binaryPath, args)
+  return $(binaryPath, [inputPath, ...(resizeGeometry ? ['-resize', resizeGeometry] : []), ...flags, outputPath])
 }
 
-const runMaxSize = async ({
-  inputPath,
-  outputPath,
-  maxSize,
-  losy = false
-}) => {
+const runMaxSize = async ({ inputPath, outputPath, maxSize, losy = false }) => {
   const resultByScale = new Map()
 
   const measureScale = async scale => {
     if (resultByScale.has(scale)) return resultByScale.get(scale)
 
-    const candidatePath = `${outputPath}.scale${scale}${path.extname(
-      outputPath
-    )}`
+    const candidatePath = `${outputPath}.scale${scale}${path.extname(outputPath)}`
     const resizeGeometry = scale === 100 ? null : `${scale}%`
 
     await runOnce({
@@ -218,16 +167,10 @@ const runMaxSize = async ({
   }
 
   const full = await measureScale(100)
-  if (full.size <= maxSize) {
-    await rename(full.candidatePath, outputPath)
-    return
-  }
+  if (full.size <= maxSize) return rename(full.candidatePath, outputPath)
 
   const min = await measureScale(1)
-  if (min.size > maxSize) {
-    await rename(min.candidatePath, outputPath)
-    return
-  }
+  if (min.size > maxSize) return rename(min.candidatePath, outputPath)
 
   let low = 1
   let high = 100
@@ -260,30 +203,23 @@ const runMaxSize = async ({
   }
 }
 
-const run = async ({
-  inputPath,
-  outputPath,
-  resizeConfig,
-  losy = false
-}) => {
+const run = async ({ inputPath, outputPath, resizeConfig, losy = false }) => {
   if (resizeConfig?.mode === 'max-size') {
-    await runMaxSize({
+    return runMaxSize({
       inputPath,
       outputPath,
       maxSize: resizeConfig.value,
       losy
     })
-    return
   }
 
   if (!losy) {
-    await runOnce({
+    return runOnce({
       inputPath,
       outputPath,
       resizeGeometry: resizeConfig?.value,
       losy: false
     })
-    return
   }
 
   const lossyPath = `${outputPath}.lossy${path.extname(outputPath)}`

@@ -1,8 +1,8 @@
 'use strict'
 
 const { unlink } = require('node:fs/promises')
-
 const $ = require('tinyspawn')
+
 const resolveBinary = require('../util/resolve-binary')
 
 const binaryPath = resolveBinary('svgo')
@@ -59,8 +59,8 @@ const AGGRESSIVE_PLUGINS = COMMON_PLUGINS.concat([
   'removeXMLNS'
 ])
 
-const run = async ({ inputPath, outputPath, plugins }) => {
-  await $(binaryPath, [
+const run = async ({ inputPath, outputPath, plugins }) =>
+  $(binaryPath, [
     inputPath,
     '--config={"full":true}',
     '--multipass',
@@ -68,38 +68,31 @@ const run = async ({ inputPath, outputPath, plugins }) => {
     '--output',
     outputPath
   ])
-}
 
-const svg = withMeta(
-  'svg',
-  async ({ inputPath, outputPath, losy = false }) => {
-    if (!losy) {
-      await run({ inputPath, outputPath, plugins: COMMON_PLUGINS })
-      return
-    }
+const svg = withMeta('svg', async ({ inputPath, outputPath, losy = false }) => {
+  if (!losy) return run({ inputPath, outputPath, plugins: COMMON_PLUGINS })
 
-    const lossyPath = `${outputPath}.lossy.svg`
+  const lossyPath = `${outputPath}.lossy.svg`
+  try {
+    await run({
+      inputPath,
+      outputPath: lossyPath,
+      plugins: AGGRESSIVE_PLUGINS
+    })
+    await run({
+      inputPath: lossyPath,
+      outputPath,
+      plugins: COMMON_PLUGINS
+    })
+  } finally {
     try {
-      await run({
-        inputPath,
-        outputPath: lossyPath,
-        plugins: AGGRESSIVE_PLUGINS
-      })
-      await run({
-        inputPath: lossyPath,
-        outputPath,
-        plugins: COMMON_PLUGINS
-      })
-    } finally {
-      try {
-        await unlink(lossyPath)
-      } catch (error) {
-        if (error.code !== 'ENOENT') {
-          // Ignore cleanup failures.
-        }
+      await unlink(lossyPath)
+    } catch (error) {
+      if (error.code !== 'ENOENT') {
+        // Ignore cleanup failures.
       }
     }
   }
-)
+})
 
 module.exports = { binaryPath, svg }

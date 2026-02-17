@@ -27,6 +27,7 @@ npx -y optimo public/media/banner.png --resize 50% # resize + optimize
 npx -y optimo public/media/banner.png --resize 100kB # resize to max file size
 npx -y optimo public/media/banner.png --resize w960 # resize to max width
 npx -y optimo public/media/banner.png --resize h480 # resize to max height
+npx -y optimo public/media/banner.heic --dry-run --verbose # inspect unsupported failures
 ```
 
 ## Pipelines
@@ -43,6 +44,7 @@ Mode behavior:
 
 - default: lossless-first pipeline.
 - `-l, --losy`: lossy + lossless pass per matching compressor.
+- `-v, --verbose`: print debug logs (selected pipeline, binaries, executed commands, and errors).
 
 
 Example output:

@@ -11,6 +11,7 @@ const formatBytes = require('./util/format-bytes')
 const parseResize = require('./util/parse-resize')
 const percentage = require('./util/percentage')
 const formatLog = require('./util/format-log')
+const debug = require('./util/debug')
 
 const runStepInPlaceIfSmaller = async ({ currentPath, extension, step }) => {
   const candidatePath = `${currentPath}.candidate${extension}`
@@ -35,13 +36,7 @@ const runStepInPlaceIfSmaller = async ({ currentPath, extension, step }) => {
   }
 }
 
-const executePipeline = async ({
-  pipeline,
-  filePath,
-  optimizedPath,
-  resizeConfig,
-  losy
-}) => {
+const executePipeline = async ({ pipeline, filePath, optimizedPath, resizeConfig, losy }) => {
   const extension = path.extname(optimizedPath) || '.tmp'
 
   await pipeline[0]({
@@ -62,28 +57,14 @@ const executePipeline = async ({
   return (await stat(optimizedPath)).size
 }
 
-const file = async (
-  filePath,
-  {
-    onLogs = () => {},
-    dryRun,
-    format: outputFormat,
-    resize,
-    losy = false
-  } = {}
-) => {
+const file = async (filePath, { onLogs = () => {}, dryRun, format: outputFormat, resize, losy = false } = {}) => {
   const outputPath = getOutputPath(filePath, outputFormat)
   const resizeConfig = parseResize(resize)
-
   const filePipeline = getPipeline(outputPath)
   const executionPipeline = [...filePipeline]
 
-  const needsMagickForTransform =
-    Boolean(resizeConfig) || outputPath !== filePath
-  if (
-    needsMagickForTransform &&
-    executionPipeline[0]?.binaryName !== 'magick'
-  ) {
+  const needsMagickForTransform = Boolean(resizeConfig) || outputPath !== filePath
+  if (needsMagickForTransform && executionPipeline[0]?.binaryName !== 'magick') {
     const magick = require('./compressor/magick')
     const ext = path.extname(outputPath).toLowerCase().replace(/^\./, '')
     const magickStep = magick[ext] || magick.file
@@ -117,7 +98,24 @@ const file = async (
         losy
       })
     }
-  } catch {
+  } catch (error) {
+    try {
+      await unlink(optimizedPath)
+    } catch (cleanupError) {
+      if (cleanupError.code !== 'ENOENT') {
+        debug.warn('file=optimize stage=cleanup-error', {
+          filePath: optimizedPath,
+          message: cleanupError?.message || 'cleanup failed'
+        })
+      }
+    }
+
+    debug.error('file=optimize stage=error', {
+      filePath,
+      message: error?.message || 'unknown',
+      code: error?.code || 'unknown',
+      name: error?.name || 'Error'
+    })
     onLogs(formatLog('[unsupported]', yellow, filePath))
     return { originalSize: 0, optimizedSize: 0 }
   }
@@ -160,9 +158,7 @@ const file = async (
 }
 
 const dir = async (folderPath, opts) => {
-  const items = (await readdir(folderPath, { withFileTypes: true })).filter(
-    item => !item.name.startsWith('.')
-  )
+  const items = (await readdir(folderPath, { withFileTypes: true })).filter(item => !item.name.startsWith('.'))
   let totalOriginalSize = 0
   let totalOptimizedSize = 0
 

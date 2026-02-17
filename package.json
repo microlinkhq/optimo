@@ -32,6 +32,7 @@
     "optimize"
   ],
   "dependencies": {
+    "debug-logfmt": "~1.4.7",
     "mri": "~1.2.0",
     "tinyspawn": "~1.5.5"
   },

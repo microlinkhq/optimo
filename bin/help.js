@@ -12,6 +12,7 @@ Options
   -d, --dry-run  Show what would be optimized without making changes
   -f, --format   Convert output format (e.g. jpeg, webp, avif)
   -r, --resize   Resize by percentage (50%), size (100kB), width (w960), or height (h480)
+  -v, --verbose  Print debug logs (commands, pipeline, and errors)
 
 Examples
   $ optimo image.jpg
@@ -23,4 +24,5 @@ Examples
   $ optimo image.png -r 100kB
   $ optimo image.png -r w960
   $ optimo image.png -r h480
+  $ optimo image.heic -d -v
 `)

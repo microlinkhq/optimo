@@ -34,7 +34,10 @@ const getRequiredBinaries = (pipeline, opts = {}) => {
       continue
     }
 
-    binaries.push({ name: step.binaryName, binaryPath: step.binaryPath || false })
+    binaries.push({
+      name: step.binaryName,
+      binaryPath: step.binaryPath || false
+    })
   }
 
   return Array.from(
