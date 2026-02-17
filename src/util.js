@@ -35,6 +35,23 @@ const parseResize = resize => {
   const raw = String(resize).trim()
   const normalized = raw.toLowerCase().replace(/\s+/g, '')
 
+  const dimensionMatch = normalized.match(/^([wh])(\d+)$/)
+  if (dimensionMatch) {
+    const axis = dimensionMatch[1]
+    const value = Number(dimensionMatch[2])
+
+    if (!Number.isFinite(value) || value <= 0) {
+      throw new TypeError(
+        'Resize width/height must be greater than 0 (e.g. w960, h480)'
+      )
+    }
+
+    return {
+      mode: 'dimension',
+      value: axis === 'w' ? `${value}x` : `x${value}`
+    }
+  }
+
   const maxSizeMatch = normalized.match(/^(\d*\.?\d+)(b|kb|mb|gb)$/)
   if (maxSizeMatch) {
     const units = { b: 1, kb: 1024, mb: 1024 ** 2, gb: 1024 ** 3 }
@@ -56,7 +73,7 @@ const parseResize = resize => {
 
   if (!Number.isFinite(value) || value <= 0) {
     throw new TypeError(
-      'Resize must be a percentage (e.g. 50 or 50%) or max size (e.g. 100kB)'
+      'Resize must be a percentage (50%), max size (100kB), width (w960), or height (h480)'
     )
   }
 

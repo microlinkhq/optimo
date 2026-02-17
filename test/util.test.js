@@ -58,8 +58,14 @@ test('parseResize parses max-size resize values', t => {
   })
 })
 
+test('parseResize parses width and height resize values', t => {
+  t.deepEqual(parseResize('w960'), { mode: 'dimension', value: '960x' })
+  t.deepEqual(parseResize('h480'), { mode: 'dimension', value: 'x480' })
+  t.deepEqual(parseResize(' W1280 '), { mode: 'dimension', value: '1280x' })
+})
+
 test('parseResize throws on invalid input', t => {
   const error = t.throws(() => parseResize('invalid'))
   t.true(error instanceof TypeError)
-  t.true(error.message.includes('Resize must be a percentage'))
+  t.true(error.message.includes('Resize must be'))
 })
