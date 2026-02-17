@@ -8,7 +8,7 @@
   <br><br>
 </div>
 
-`optimo` is an CLI for aggressively reducing image file size with sane defaults. It's implemented on top of [ImageMagick](https://imagemagick.org/#gsc.tab=0).
+`optimo` is an CLI for aggressively reducing image file size with sane defaults.
 
 ## Install
 
@@ -16,6 +16,7 @@
 npx -y optimo public/media            # for a directory
 npx -y optimo public/media/banner.png # for a file
 npx -y optimo public/media/banner.png -f jpeg # convert + optimize
+npx -y optimo public/media/banner.png -a # aggressive compression (lossy + lossless)
 npx -y optimo public/media/banner.png -r 50% # resize + optimize
 npx -y optimo public/media/banner.png -r 100kB # resize to max file size
 npx -y optimo public/media/banner.png -r w960 # resize to max width
@@ -24,11 +25,35 @@ npx -y optimo public/media/banner.png -r h480 # resize to max height
 
 ## Highlights
 
-- Metadata stripping.
-- Compression-first per format.
+- Per-format compressor pipelines.
+- Compression-first defaults with safe file replacement.
 - Format-specific tuning for stronger size reduction.
 - Safety guard: if optimized output is not smaller, original file is kept.
 - Resizing supports percentage values (`50%`), max file size targets (`100kB`), width (`w960`), & height (`h480`).
+
+## Required Binaries
+
+`optimo` resolves compressors from your `PATH` and throws if a required binary for the target pipeline is missing.
+
+- `magick` for all ImageMagick-backed formats.
+- `svgo` for SVG optimization.
+- `mozjpegtran` or `jpegtran` for JPEG second-pass optimization.
+- `gifsicle` for GIF second-pass optimization.
+
+## Pipelines
+
+`optimo` chooses the pipeline by output format:
+
+- `.png` -> `magick.png`
+- `.svg` -> `svgo.svg`
+- `.jpg/.jpeg` -> `magick.jpg/jpeg` + `mozjpegtran.jpg/jpeg`
+- `.gif` -> `magick.gif` + `gifsicle.gif`
+- other formats (`webp`, `avif`, `heic`, `heif`, `jxl`, etc.) -> `magick.<format>`
+
+Mode behavior:
+
+- default: lossless-first pipeline (ImgBot-style default)
+- `-a, --aggressive-compression`: lossy + lossless pass per matching compressor
 
 ## Programmatic API
 
@@ -38,6 +63,7 @@ const optimo = require('optimo')
 // optimize a single file
 await optimo.file('/absolute/path/image.jpg', {
   dryRun: false,
+  aggressiveCompression: false,
   format: 'webp',
   resize: '50%',
   onLogs: console.log

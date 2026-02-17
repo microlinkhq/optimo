@@ -1,6 +1,6 @@
 'use strict'
 
-const { gray, blue } = require('../src/colors')
+const { gray, blue } = require('../src/util/colors')
 
 module.exports = gray(`Efortless image optimizer
 
@@ -8,12 +8,14 @@ Usage
   $ ${blue('optimo')} <file|dir> [options]
 
 Options
+  -a, --aggressive-compression  Enable lossy + lossless pass (ImgBot-style aggressive mode)
   -d, --dry-run  Show what would be optimized without making changes
   -f, --format   Convert output format (e.g. jpeg, webp, avif)
   -r, --resize   Resize by percentage (50%), size (100kB), width (w960), or height (h480)
 
 Examples
   $ optimo image.jpg
+  $ optimo image.jpg -a
   $ optimo image.png --dry-run
   $ optimo image.jpg -d
   $ optimo image.png -f jpeg

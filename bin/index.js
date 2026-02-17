@@ -5,11 +5,12 @@ const { stat } = require('node:fs/promises')
 const optimo = require('optimo')
 const mri = require('mri')
 
-const colors = require('../src/colors')
+const colors = require('../src/util/colors')
 
 async function main () {
   const argv = mri(process.argv.slice(2), {
     alias: {
+      'aggressive-compression': 'a',
       'dry-run': 'd',
       format: 'f',
       resize: 'r',
@@ -44,6 +45,7 @@ async function main () {
   !argv.silent && console.log()
 
   await fn(input, {
+    aggressiveCompression: argv['aggressive-compression'],
     dryRun: argv['dry-run'],
     format: argv.format,
     resize,
