@@ -12,6 +12,7 @@ async function main () {
     alias: {
       'dry-run': 'd',
       format: 'f',
+      resize: 'r',
       silent: 's'
     }
   })
@@ -33,6 +34,7 @@ async function main () {
   await fn(input, {
     dryRun: argv['dry-run'],
     format: argv.format,
+    resize: argv.resize,
     onLogs: logger
   })
 

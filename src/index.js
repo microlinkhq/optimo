@@ -151,14 +151,30 @@ const getMagickFlags = filePath => {
   return MAGICK_GENERIC_FLAGS
 }
 
+const parseResize = resize => {
+  if (resize === undefined || resize === null || resize === '') return null
+
+  const normalized = String(resize).trim().replace(/%$/, '')
+  const value = Number(normalized)
+
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new TypeError(
+      'Resize percentage must be a number greater than 0 (e.g. 50 or 50%)'
+    )
+  }
+
+  return `${value}%`
+}
+
 const file = async (
   filePath,
-  { onLogs = () => {}, dryRun, format: outputFormat } = {}
+  { onLogs = () => {}, dryRun, format: outputFormat, resize } = {}
 ) => {
   if (!magickPath) {
     throw new Error('ImageMagick is not installed')
   }
   const outputPath = getOutputPath(filePath, outputFormat)
+  const resizePercentage = parseResize(resize)
   const flags = getMagickFlags(outputPath)
 
   const optimizedPath = `${outputPath}.optimized`
@@ -166,9 +182,16 @@ const file = async (
 
   let originalSize
   try {
+    const magickArgs = [
+      filePath,
+      ...(resizePercentage ? ['-resize', resizePercentage] : []),
+      ...flags,
+      optimizedPath
+    ]
+
     ;[originalSize] = await Promise.all([
       (await stat(filePath)).size,
-      await $('magick', [filePath, ...flags, optimizedPath])
+      await $('magick', magickArgs)
     ])
   } catch {
     onLogs(formatLog('[unsupported]', yellow, filePath))

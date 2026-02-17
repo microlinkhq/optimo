@@ -16,6 +16,7 @@
 npx -y optimo public/media            # for a directory
 npx -y optimo public/media/banner.png # for a file
 npx -y optimo public/media/banner.png -f jpeg # convert + optimize
+npx -y optimo public/media/banner.png -r 50% # resize + optimize
 ```
 
 ## Optimization Strategy
@@ -34,6 +35,7 @@ const optimo = require('optimo')
 await optimo.file('/absolute/path/image.jpg', {
   dryRun: false,
   format: 'webp',
+  resize: '50%',
   onLogs: console.log
 })
 
