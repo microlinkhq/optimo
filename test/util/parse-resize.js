@@ -1,41 +1,7 @@
 'use strict'
 
 const test = require('ava')
-
-const {
-  formatBytes,
-  formatLog,
-  normalizeFormat,
-  parseResize,
-  percentage
-} = require('../src/util')
-
-test('formatBytes formats values across units', t => {
-  t.is(formatBytes(0), '0 B')
-  t.is(formatBytes(1024), '1 KB')
-  t.is(formatBytes(1536), '1.5 KB')
-  t.is(formatBytes(1024 * 1024), '1 MB')
-})
-
-test('formatLog pads status and includes file path', t => {
-  const output = formatLog('[ok]', value => value, '/tmp/image.png')
-
-  t.true(output.startsWith('[ok]'))
-  t.true(output.includes('/tmp/image.png'))
-  t.true(output.includes('[ok]'.padEnd(13, ' ')))
-})
-
-test('percentage returns a single decimal string', t => {
-  t.is(percentage(80, 100), '-20.0')
-  t.is(percentage(100, 100), '0.0')
-})
-
-test('normalizeFormat normalizes extension aliases and casing', t => {
-  t.is(normalizeFormat('.JPG'), 'jpeg')
-  t.is(normalizeFormat(' tif '), 'tiff')
-  t.is(normalizeFormat('webp'), 'webp')
-  t.is(normalizeFormat(null), null)
-})
+const parseResize = require('../../src/util/parse-resize')
 
 test('parseResize returns null for empty values', t => {
   t.is(parseResize(undefined), null)

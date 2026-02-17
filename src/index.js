@@ -1,108 +1,83 @@
 'use strict'
 
-const { stat, unlink, rename, readdir } = require('node:fs/promises')
-
+const { stat, unlink, rename, readdir, copyFile } = require('node:fs/promises')
 const path = require('node:path')
-const $ = require('tinyspawn')
 
-const { magickPath, magickFlags } = require('./magick')
-const { yellow, gray, green } = require('./colors')
+const { getPipeline, getRequiredBinaries } = require('./compressor')
+const ensureBinaries = require('./util/ensure-binaries')
+const { yellow, gray, green } = require('./util/colors')
+const getOutputPath = require('./util/get-output-path')
+const formatBytes = require('./util/format-bytes')
+const parseResize = require('./util/parse-resize')
+const percentage = require('./util/percentage')
+const formatLog = require('./util/format-log')
+const debug = require('./util/debug')
 
-const {
-  formatBytes,
-  formatLog,
-  normalizeFormat,
-  parseResize,
-  percentage
-} = require('./util')
+const runStepInPlaceIfSmaller = async ({ currentPath, extension, step }) => {
+  const candidatePath = `${currentPath}.candidate${extension}`
 
-const getOutputPath = (filePath, format) => {
-  const normalizedFormat = normalizeFormat(format)
-  if (!normalizedFormat) return filePath
-  const parsed = path.parse(filePath)
-  return path.join(parsed.dir, `${parsed.name}.${normalizedFormat}`)
+  await step({
+    inputPath: currentPath,
+    outputPath: candidatePath,
+    resizeConfig: null,
+    losy: false
+  })
+
+  const [currentSize, candidateSize] = await Promise.all([
+    stat(currentPath).then(value => value.size),
+    stat(candidatePath).then(value => value.size)
+  ])
+
+  if (candidateSize < currentSize) {
+    await unlink(currentPath)
+    await rename(candidatePath, currentPath)
+  } else {
+    await unlink(candidatePath)
+  }
 }
 
-const runMagick = async ({
-  filePath,
-  optimizedPath,
-  flags,
-  resizeGeometry = null
-}) => {
-  const magickArgs = [
-    filePath,
-    ...(resizeGeometry ? ['-resize', resizeGeometry] : []),
-    ...flags,
-    optimizedPath
-  ]
+const executePipeline = async ({ pipeline, filePath, optimizedPath, resizeConfig, losy }) => {
+  const extension = path.extname(optimizedPath) || '.tmp'
 
-  await $('magick', magickArgs)
+  await pipeline[0]({
+    inputPath: filePath,
+    outputPath: optimizedPath,
+    resizeConfig,
+    losy
+  })
+
+  for (const step of pipeline.slice(1)) {
+    await runStepInPlaceIfSmaller({
+      currentPath: optimizedPath,
+      extension,
+      step: async args => step({ ...args, losy })
+    })
+  }
+
   return (await stat(optimizedPath)).size
 }
 
-const optimizeForMaxSize = async ({
-  filePath,
-  optimizedPath,
-  flags,
-  maxSize
-}) => {
-  const resultByScale = new Map()
-
-  const measureScale = async scale => {
-    if (resultByScale.has(scale)) return resultByScale.get(scale)
-    const resizeGeometry = scale === 100 ? null : `${scale}%`
-    const size = await runMagick({
-      filePath,
-      optimizedPath,
-      flags,
-      resizeGeometry
-    })
-    resultByScale.set(scale, size)
-    return size
-  }
-
-  const fullSize = await measureScale(100)
-  if (fullSize <= maxSize) {
-    return fullSize
-  }
-
-  const minScaleSize = await measureScale(1)
-  if (minScaleSize > maxSize) {
-    return minScaleSize
-  }
-
-  let low = 1
-  let high = 100
-  let bestScale = 1
-
-  while (high - low > 1) {
-    const mid = Math.floor((low + high) / 2)
-    const size = await measureScale(mid)
-
-    if (size <= maxSize) {
-      low = mid
-      bestScale = mid
-    } else {
-      high = mid
-    }
-  }
-
-  await measureScale(bestScale)
-  return resultByScale.get(bestScale)
-}
-
-const file = async (
-  filePath,
-  { onLogs = () => {}, dryRun, format: outputFormat, resize } = {}
-) => {
-  if (!magickPath) {
-    throw new Error('ImageMagick is not installed')
-  }
+const file = async (filePath, { onLogs = () => {}, dryRun, format: outputFormat, resize, losy = false } = {}) => {
   const outputPath = getOutputPath(filePath, outputFormat)
   const resizeConfig = parseResize(resize)
-  const flags = magickFlags(outputPath)
+  const filePipeline = getPipeline(outputPath)
+  const executionPipeline = [...filePipeline]
 
-  const optimizedPath = `${outputPath}.optimized`
+  const needsMagickForTransform = Boolean(resizeConfig) || outputPath !== filePath
+  if (needsMagickForTransform && executionPipeline[0]?.binaryName !== 'magick') {
+    const magick = require('./compressor/magick')
+    const ext = path.extname(outputPath).toLowerCase().replace(/^\./, '')
+    const magickStep = magick[ext] || magick.file
+    executionPipeline.unshift(magickStep)
+  }
+
+  ensureBinaries(
+    getRequiredBinaries(executionPipeline, {
+      losy
+    })
+  )
+
+  const optimizedPath = `${outputPath}.optimized${path.extname(outputPath)}`
   const isConverting = outputPath !== filePath
 
   let originalSize
@@ -111,22 +86,36 @@ const file = async (
   try {
     originalSize = (await stat(filePath)).size
 
-    if (resizeConfig?.mode === 'max-size') {
-      optimizedSize = await optimizeForMaxSize({
-        filePath,
-        optimizedPath,
-        flags,
-        maxSize: resizeConfig.value
-      })
+    if (executionPipeline.length === 0) {
+      await copyFile(filePath, optimizedPath)
+      optimizedSize = (await stat(optimizedPath)).size
     } else {
-      optimizedSize = await runMagick({
+      optimizedSize = await executePipeline({
+        pipeline: executionPipeline,
         filePath,
         optimizedPath,
-        flags,
-        resizeGeometry: resizeConfig?.value
+        resizeConfig,
+        losy
       })
     }
-  } catch {
+  } catch (error) {
+    try {
+      await unlink(optimizedPath)
+    } catch (cleanupError) {
+      if (cleanupError.code !== 'ENOENT') {
+        debug.warn('file=optimize stage=cleanup-error', {
+          filePath: optimizedPath,
+          message: cleanupError?.message || 'cleanup failed'
+        })
+      }
+    }
+
+    debug.error('file=optimize stage=error', {
+      filePath,
+      message: error?.message || 'unknown',
+      code: error?.code || 'unknown',
+      name: error?.name || 'Error'
+    })
     onLogs(formatLog('[unsupported]', yellow, filePath))
     return { originalSize: 0, optimizedSize: 0 }
   }
@@ -169,9 +158,7 @@ const file = async (
 }
 
 const dir = async (folderPath, opts) => {
-  const items = (await readdir(folderPath, { withFileTypes: true })).filter(
-    item => !item.name.startsWith('.')
-  )
+  const items = (await readdir(folderPath, { withFileTypes: true })).filter(item => !item.name.startsWith('.'))
   let totalOriginalSize = 0
   let totalOptimizedSize = 0
 
