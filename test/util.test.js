@@ -60,7 +60,9 @@ test('parseResize parses max-size resize values', t => {
 
 test('parseResize parses width and height resize values', t => {
   t.deepEqual(parseResize('w960'), { mode: 'dimension', value: '960x' })
+  t.deepEqual(parseResize('960w'), { mode: 'dimension', value: '960x' })
   t.deepEqual(parseResize('h480'), { mode: 'dimension', value: 'x480' })
+  t.deepEqual(parseResize('480h'), { mode: 'dimension', value: 'x480' })
   t.deepEqual(parseResize(' W1280 '), { mode: 'dimension', value: '1280x' })
 })
 

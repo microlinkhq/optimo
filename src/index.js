@@ -27,11 +27,11 @@ const runMagick = async ({
   filePath,
   optimizedPath,
   flags,
-  resizePercentage = null
+  resizeGeometry = null
 }) => {
   const magickArgs = [
     filePath,
-    ...(resizePercentage ? ['-resize', resizePercentage] : []),
+    ...(resizeGeometry ? ['-resize', resizeGeometry] : []),
     ...flags,
     optimizedPath
   ]
@@ -50,12 +50,12 @@ const optimizeForMaxSize = async ({
 
   const measureScale = async scale => {
     if (resultByScale.has(scale)) return resultByScale.get(scale)
-    const resizePercentage = scale === 100 ? null : `${scale}%`
+    const resizeGeometry = scale === 100 ? null : `${scale}%`
     const size = await runMagick({
       filePath,
       optimizedPath,
       flags,
-      resizePercentage
+      resizeGeometry
     })
     resultByScale.set(scale, size)
     return size
@@ -87,6 +87,7 @@ const optimizeForMaxSize = async ({
     }
   }
 
+  await measureScale(bestScale)
   return resultByScale.get(bestScale)
 }
 
@@ -122,7 +123,7 @@ const file = async (
         filePath,
         optimizedPath,
         flags,
-        resizePercentage: resizeConfig?.value
+        resizeGeometry: resizeConfig?.value
       })
     }
   } catch {

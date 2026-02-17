@@ -35,14 +35,16 @@ const parseResize = resize => {
   const raw = String(resize).trim()
   const normalized = raw.toLowerCase().replace(/\s+/g, '')
 
-  const dimensionMatch = normalized.match(/^([wh])(\d+)$/)
+  const dimensionMatch =
+    normalized.match(/^([wh])(\d+)$/) || normalized.match(/^(\d+)([wh])$/)
   if (dimensionMatch) {
-    const axis = dimensionMatch[1]
-    const value = Number(dimensionMatch[2])
+    const [, first, second] = dimensionMatch
+    const axis = first === 'w' || first === 'h' ? first : second
+    const value = Number(first === axis ? second : first)
 
     if (!Number.isFinite(value) || value <= 0) {
       throw new TypeError(
-        'Resize width/height must be greater than 0 (e.g. w960, h480)'
+        'Resize width/height must be greater than 0 (e.g. w960, 960w, h480, 480h)'
       )
     }
 
@@ -73,7 +75,7 @@ const parseResize = resize => {
 
   if (!Number.isFinite(value) || value <= 0) {
     throw new TypeError(
-      'Resize must be a percentage (50%), max size (100kB), width (w960), or height (h480)'
+      'Resize must be a percentage (50%), max size (100kB), width (w960/960w), or height (h480/480h)'
     )
   }
 
