@@ -18,7 +18,58 @@ const formatLog = (plainStatus, colorize, filePath) => {
   return `${colorize(paddedPlainStatus)} ${gray(filePath)}`
 }
 
+const percentage = (partial, total) =>
+  (((partial - total) / total) * 100).toFixed(1)
+
+const normalizeFormat = format => {
+  if (!format) return null
+  const normalized = String(format).trim().toLowerCase().replace(/^\./, '')
+  if (normalized === 'jpg') return 'jpeg'
+  if (normalized === 'tif') return 'tiff'
+  return normalized
+}
+
+const parseResize = resize => {
+  if (resize === undefined || resize === null || resize === '') return null
+
+  const raw = String(resize).trim()
+  const normalized = raw.toLowerCase().replace(/\s+/g, '')
+
+  const maxSizeMatch = normalized.match(/^(\d*\.?\d+)(b|kb|mb|gb)$/)
+  if (maxSizeMatch) {
+    const units = { b: 1, kb: 1024, mb: 1024 ** 2, gb: 1024 ** 3 }
+    const value = Number(maxSizeMatch[1])
+    if (!Number.isFinite(value) || value <= 0) {
+      throw new TypeError(
+        'Resize max size must be greater than 0 (e.g. 100kB, 2MB)'
+      )
+    }
+
+    return {
+      mode: 'max-size',
+      value: Math.floor(value * units[maxSizeMatch[2]])
+    }
+  }
+
+  const percentage = raw.replace(/%$/, '')
+  const value = Number(percentage)
+
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new TypeError(
+      'Resize must be a percentage (e.g. 50 or 50%) or max size (e.g. 100kB)'
+    )
+  }
+
+  return {
+    mode: 'percentage',
+    value: `${value}%`
+  }
+}
+
 module.exports = {
   formatBytes,
-  formatLog
+  formatLog,
+  normalizeFormat,
+  parseResize,
+  percentage
 }

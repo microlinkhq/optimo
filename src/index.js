@@ -1,169 +1,93 @@
 'use strict'
 
 const { stat, unlink, rename, readdir } = require('node:fs/promises')
-const { execSync } = require('child_process')
+
 const path = require('node:path')
 const $ = require('tinyspawn')
 
-const { formatLog, formatBytes } = require('./util')
+const { magickPath, magickFlags } = require('./magick')
 const { yellow, gray, green } = require('./colors')
 
-/*
- * JPEG preset (compression-first):
- * - Favor smaller output via chroma subsampling and optimized Huffman coding.
- * - Progressive scan improves perceived loading on the web.
- */
-const MAGICK_JPEG_FLAGS = [
-  '-strip',
-  '-sampling-factor',
-  '4:2:0',
-  '-define',
-  'jpeg:optimize-coding=true',
-  '-define',
-  'jpeg:dct-method=float',
-  '-quality',
-  '80',
-  '-interlace',
-  'Plane'
-]
-
-/*
- * PNG preset (maximum deflate effort):
- * - Strip metadata payloads.
- * - Use highest compression level with explicit strategy/filter tuning.
- */
-const MAGICK_PNG_FLAGS = [
-  '-strip',
-  '-define',
-  'png:compression-level=9',
-  '-define',
-  'png:compression-strategy=1',
-  '-define',
-  'png:compression-filter=5'
-]
-
-/*
- * GIF preset (animation optimization):
- * - Coalesce frames before layer optimization to maximize delta compression.
- * - OptimizePlus is more aggressive for animated GIF size reduction.
- */
-const MAGICK_GIF_FLAGS = ['-strip', '-coalesce', '-layers', 'OptimizePlus']
-
-/*
- * WebP preset (compression-first):
- * - Use a strong encoder method and preserve compatibility with lossy output.
- */
-const MAGICK_WEBP_FLAGS = [
-  '-strip',
-  '-define',
-  'webp:method=6',
-  '-define',
-  'webp:thread-level=1',
-  '-quality',
-  '80'
-]
-
-/*
- * AVIF preset (compression-first):
- * - Slow encoder speed for stronger compression.
- */
-const MAGICK_AVIF_FLAGS = [
-  '-strip',
-  '-define',
-  'heic:speed=1',
-  '-quality',
-  '50'
-]
-
-/*
- * HEIC/HEIF preset (compression-first):
- * - Slow encoder speed for stronger compression.
- */
-const MAGICK_HEIC_FLAGS = [
-  '-strip',
-  '-define',
-  'heic:speed=1',
-  '-quality',
-  '75'
-]
-
-/*
- * JPEG XL preset (compression-first):
- * - Use max effort where supported.
- */
-const MAGICK_JXL_FLAGS = ['-strip', '-define', 'jxl:effort=9', '-quality', '75']
-
-/*
- * SVG preset:
- * - Keep optimization minimal to avoid destructive transformations.
- */
-const MAGICK_SVG_FLAGS = ['-strip']
-
-/*
- * Generic preset for any other format:
- * - Keep it broadly safe across decoders while still reducing size.
- */
-const MAGICK_GENERIC_FLAGS = ['-strip']
-
-const magickPath = (() => {
-  try {
-    return execSync('which magick', {
-      stdio: ['pipe', 'pipe', 'ignore']
-    })
-      .toString()
-      .trim()
-  } catch {
-    return false
-  }
-})()
-
-const percentage = (partial, total) =>
-  (((partial - total) / total) * 100).toFixed(1)
-
-const normalizeFormat = format => {
-  if (!format) return null
-
-  const normalized = String(format).trim().toLowerCase().replace(/^\./, '')
-  if (normalized === 'jpg') return 'jpeg'
-  if (normalized === 'tif') return 'tiff'
-
-  return normalized
-}
+const {
+  formatBytes,
+  formatLog,
+  normalizeFormat,
+  parseResize,
+  percentage
+} = require('./util')
 
 const getOutputPath = (filePath, format) => {
   const normalizedFormat = normalizeFormat(format)
   if (!normalizedFormat) return filePath
-
   const parsed = path.parse(filePath)
   return path.join(parsed.dir, `${parsed.name}.${normalizedFormat}`)
 }
 
-const getMagickFlags = filePath => {
-  const ext = path.extname(filePath).toLowerCase()
-  if (ext === '.jpg' || ext === '.jpeg') return MAGICK_JPEG_FLAGS
-  if (ext === '.png') return MAGICK_PNG_FLAGS
-  if (ext === '.gif') return MAGICK_GIF_FLAGS
-  if (ext === '.webp') return MAGICK_WEBP_FLAGS
-  if (ext === '.avif') return MAGICK_AVIF_FLAGS
-  if (ext === '.heic' || ext === '.heif') return MAGICK_HEIC_FLAGS
-  if (ext === '.jxl') return MAGICK_JXL_FLAGS
-  if (ext === '.svg') return MAGICK_SVG_FLAGS
-  return MAGICK_GENERIC_FLAGS
+const runMagick = async ({
+  filePath,
+  optimizedPath,
+  flags,
+  resizePercentage = null
+}) => {
+  const magickArgs = [
+    filePath,
+    ...(resizePercentage ? ['-resize', resizePercentage] : []),
+    ...flags,
+    optimizedPath
+  ]
+
+  await $('magick', magickArgs)
+  return (await stat(optimizedPath)).size
 }
 
-const parseResize = resize => {
-  if (resize === undefined || resize === null || resize === '') return null
+const optimizeForMaxSize = async ({
+  filePath,
+  optimizedPath,
+  flags,
+  maxSize
+}) => {
+  const resultByScale = new Map()
 
-  const normalized = String(resize).trim().replace(/%$/, '')
-  const value = Number(normalized)
-
-  if (!Number.isFinite(value) || value <= 0) {
-    throw new TypeError(
-      'Resize percentage must be a number greater than 0 (e.g. 50 or 50%)'
-    )
+  const measureScale = async scale => {
+    if (resultByScale.has(scale)) return resultByScale.get(scale)
+    const resizePercentage = scale === 100 ? null : `${scale}%`
+    const size = await runMagick({
+      filePath,
+      optimizedPath,
+      flags,
+      resizePercentage
+    })
+    resultByScale.set(scale, size)
+    return size
   }
 
-  return `${value}%`
+  const fullSize = await measureScale(100)
+  if (fullSize <= maxSize) {
+    return fullSize
+  }
+
+  const minScaleSize = await measureScale(1)
+  if (minScaleSize > maxSize) {
+    return minScaleSize
+  }
+
+  let low = 1
+  let high = 100
+  let bestScale = 1
+
+  while (high - low > 1) {
+    const mid = Math.floor((low + high) / 2)
+    const size = await measureScale(mid)
+
+    if (size <= maxSize) {
+      low = mid
+      bestScale = mid
+    } else {
+      high = mid
+    }
+  }
+
+  return resultByScale.get(bestScale)
 }
 
 const file = async (
@@ -174,31 +98,37 @@ const file = async (
     throw new Error('ImageMagick is not installed')
   }
   const outputPath = getOutputPath(filePath, outputFormat)
-  const resizePercentage = parseResize(resize)
-  const flags = getMagickFlags(outputPath)
+  const resizeConfig = parseResize(resize)
+  const flags = magickFlags(outputPath)
 
   const optimizedPath = `${outputPath}.optimized`
   const isConverting = outputPath !== filePath
 
   let originalSize
-  try {
-    const magickArgs = [
-      filePath,
-      ...(resizePercentage ? ['-resize', resizePercentage] : []),
-      ...flags,
-      optimizedPath
-    ]
+  let optimizedSize
 
-    ;[originalSize] = await Promise.all([
-      (await stat(filePath)).size,
-      await $('magick', magickArgs)
-    ])
+  try {
+    originalSize = (await stat(filePath)).size
+
+    if (resizeConfig?.mode === 'max-size') {
+      optimizedSize = await optimizeForMaxSize({
+        filePath,
+        optimizedPath,
+        flags,
+        maxSize: resizeConfig.value
+      })
+    } else {
+      optimizedSize = await runMagick({
+        filePath,
+        optimizedPath,
+        flags,
+        resizePercentage: resizeConfig?.value
+      })
+    }
   } catch {
     onLogs(formatLog('[unsupported]', yellow, filePath))
     return { originalSize: 0, optimizedSize: 0 }
   }
-
-  const optimizedSize = (await stat(optimizedPath)).size
 
   if (!isConverting && optimizedSize >= originalSize) {
     await unlink(optimizedPath)

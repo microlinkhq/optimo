@@ -17,14 +17,16 @@ npx -y optimo public/media            # for a directory
 npx -y optimo public/media/banner.png # for a file
 npx -y optimo public/media/banner.png -f jpeg # convert + optimize
 npx -y optimo public/media/banner.png -r 50% # resize + optimize
+npx -y optimo public/media/banner.png -r 100kB # resize to max file size
 ```
 
-## Optimization Strategy
+## Highlights
 
+- Metadata stripping.
 - Compression-first per format.
-- Metadata stripping (`-strip`) where applicable.
 - Format-specific tuning for stronger size reduction.
 - Safety guard: if optimized output is not smaller, original file is kept.
+- Resizing supports percentage values (`50%`) and max file size targets (`100kB`, `2MB`).
 
 ## Programmatic API
 
@@ -36,6 +38,11 @@ await optimo.file('/absolute/path/image.jpg', {
   dryRun: false,
   format: 'webp',
   resize: '50%',
+  onLogs: console.log
+})
+
+await optimo.file('/absolute/path/image.jpg', {
+  resize: '100kB',
   onLogs: console.log
 })
 
