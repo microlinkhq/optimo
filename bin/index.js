@@ -3,7 +3,6 @@
 
 const { stat } = require('node:fs/promises')
 const colors = require('../src/util/colors')
-const optimo = require('optimo')
 const mri = require('mri')
 
 async function main () {
@@ -23,11 +22,7 @@ async function main () {
 
   if (resize !== undefined && resize !== null) {
     const unitToken = argv._[1]
-    if (
-      unitToken &&
-      /^[kmg]?b$/i.test(unitToken) &&
-      /^\d*\.?\d+$/.test(String(resize))
-    ) {
+    if (unitToken && /^[kmg]?b$/i.test(unitToken) && /^\d*\.?\d+$/.test(String(resize))) {
       resize = `${resize}${unitToken}`
     }
   }
@@ -37,15 +32,13 @@ async function main () {
     process.exit(0)
   }
 
+  if (argv.verbose) {
+    process.env.DEBUG = `${process.env.DEBUG ? `${process.env.DEBUG},` : ''}optimo*`
+  }
+
   const stats = await stat(input)
   const isDirectory = stats.isDirectory()
-  const fn = isDirectory ? optimo.dir : optimo.file
-
-  if (argv.verbose) {
-    process.env.DEBUG = `${
-      process.env.DEBUG ? `${process.env.DEBUG},` : ''
-    }optimo*`
-  }
+  const fn = isDirectory ? require('optimo').dir : require('optimo').file
 
   const logger = argv.silent ? () => {} : logEntry => console.log(logEntry)
   !argv.silent && console.log()
