@@ -62,7 +62,7 @@
     "clean": "rm -rf node_modules",
     "contributors": "(git-authors-cli && finepack && git add package.json && git commit -m 'build: contributors' --no-verify) || true",
     "coverage": "c8 report --reporter=text-lcov > coverage/lcov.info",
-    "lint": "standard-markdown README.md && standard",
+    "lint": "standard",
     "postrelease": "pnpm release:tags && pnpm release:github && (ci-publish || npm publish --access=public)",
     "pretest": "pnpm lint",
     "release": "pnpm release:version && pnpm release:changelog && pnpm release:commit && pnpm release:tag",
