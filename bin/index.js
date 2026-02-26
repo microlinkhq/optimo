@@ -11,6 +11,7 @@ async function main () {
       'dry-run': 'd',
       format: 'f',
       losy: 'l',
+      mute: 'm',
       resize: 'r',
       silent: 's',
       verbose: 'v'
@@ -18,6 +19,10 @@ async function main () {
   })
 
   const input = argv._[0]
+  const mute =
+    argv.mute === undefined
+      ? true
+      : !['false', '0', 'no', 'off'].includes(String(argv.mute).toLowerCase())
   let resize = argv.resize
 
   if (resize !== undefined && resize !== null) {
@@ -45,6 +50,7 @@ async function main () {
 
   await fn(input, {
     losy: argv.losy,
+    mute,
     dryRun: argv['dry-run'],
     format: argv.format,
     resize,
