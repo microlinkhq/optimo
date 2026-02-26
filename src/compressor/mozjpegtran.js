@@ -17,11 +17,12 @@ const withMeta = (format, fn) => {
   return wrapped
 }
 
-const run = async ({ inputPath, outputPath }) =>
+const run = async ({ inputPath, outputPath, losy = false }) =>
   $(mozjpegtranPath, [
     '-copy',
-    'none',
+    losy ? 'none' : 'all',
     '-optimize',
+    '-progressive',
     '-outfile',
     outputPath,
     inputPath
