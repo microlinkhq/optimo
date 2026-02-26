@@ -23,6 +23,7 @@
     "url": "https://github.com/kikobeats/optimo/issues"
   },
   "keywords": [
+    "ffmpeg",
     "image",
     "image-optimization",
     "image-optimizer",
@@ -32,8 +33,7 @@
     "optimize",
     "video",
     "video-optimization",
-    "video-optimizer",
-    "ffmpeg"
+    "video-optimizer"
   ],
   "dependencies": {
     "debug-logfmt": "~1.4.7",
