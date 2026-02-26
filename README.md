@@ -6,15 +6,16 @@
   <img alt="Last version" src="https://img.shields.io/github/tag/kikobeats/optimo.svg?style=flat-square">
   <a href="https://www.npmjs.org/package/optimo"><img alt="NPM Status" src="https://img.shields.io/npm/dm/optimo.svg?style=flat-square"></a>
   <br><br>
-  optimo reduces image file size aggressively, and safely.
+  optimo reduces media file size aggressively, and safely.
 </div>
 
 ## Highlights
 
 - Format-specific tuning for stronger size reduction.
 - Safety guard: if optimized output is not smaller, original file is kept.
-- Backed by proven tools: ImageMagick, SVGO, Gifsicle, and MozJPEG.
-- Resizing supports percentage values (`50%`), max file size targets (`100kB`), width (`w960`), & height (`h480`).
+- Backed by proven tools: ImageMagick, SVGO, Gifsicle, MozJPEG, and FFmpeg.
+- Supports image and video optimization.
+- Resizing supports percentage values (`50%`), max file size targets (`100kB`, images only), width (`w960`), & height (`h480`).
 
 ## Usage
 
@@ -28,6 +29,10 @@ npx -y optimo public/media/banner.png --resize 100kB # resize to max file size
 npx -y optimo public/media/banner.png --resize w960 # resize to max width
 npx -y optimo public/media/banner.png --resize h480 # resize to max height
 npx -y optimo public/media/banner.heic --dry-run --verbose # inspect unsupported failures
+npx -y optimo public/media/clip.mp4 # optimize a video
+npx -y optimo public/media/clip.mp4 --mute # optimize and remove audio
+npx -y optimo public/media/clip.mp4 --mute false # optimize video and keep audio
+npx -y optimo public/media/clip.mov --format webm # convert + optimize video
 ```
 
 ## Pipelines
@@ -38,12 +43,14 @@ When `optimo` is executed, a pipeline of compressors is chosen based on the outp
 - `.svg` -> `svgo.svg`
 - `.jpg/.jpeg` -> `magick.jpg/jpeg` + `mozjpegtran.jpg/jpeg`
 - `.gif` -> `magick.gif` + `gifsicle.gif`
-- other formats (`webp`, `avif`, `heic`, `heif`, `jxl`, etc.) -> `magick.<format>`
+- other image formats (`webp`, `avif`, `heic`, `heif`, `jxl`, etc.) -> `magick.<format>`
+- video formats (`mp4`, `m4v`, `mov`, `webm`, `mkv`, `avi`, `ogv`) -> `ffmpeg.<format>`
 
 Mode behavior:
 
 - default: lossless-first pipeline.
 - `-l, --losy`: lossy + lossless pass per matching compressor.
+- `-m, --mute`: remove audio tracks from video outputs (default: `true`; use `--mute false` to keep audio).
 - `-v, --verbose`: print debug logs (selected pipeline, binaries, executed commands, and errors).
 
 
@@ -76,6 +83,15 @@ await optimo.file('/absolute/path/image.jpg', {
 
 await optimo.file('/absolute/path/image.jpg', {
   resize: 'w960',
+  onLogs: console.log
+})
+
+await optimo.file('/absolute/path/video.mp4', {
+  losy: true,
+  // mute defaults to true for videos; set false to keep audio
+  mute: false,
+  format: 'webm',
+  resize: 'w1280',
   onLogs: console.log
 })
 

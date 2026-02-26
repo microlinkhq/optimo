@@ -1,6 +1,6 @@
 {
   "name": "optimo",
-  "description": "The no-brainer ImageMagick CLI for optimizing images",
+  "description": "The no-brainer CLI for optimizing images and videos",
   "homepage": "https://github.com/kikobeats/optimo",
   "version": "0.0.16",
   "exports": {
@@ -29,7 +29,11 @@
     "imagemagick",
     "images",
     "optimization",
-    "optimize"
+    "optimize",
+    "video",
+    "video-optimization",
+    "video-optimizer",
+    "ffmpeg"
   ],
   "dependencies": {
     "debug-logfmt": "~1.4.7",

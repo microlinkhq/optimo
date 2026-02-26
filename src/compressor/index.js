@@ -5,6 +5,7 @@ const path = require('node:path')
 const mozjpegtran = require('./mozjpegtran')
 const gifsicle = require('./gifsicle')
 const magick = require('./magick')
+const ffmpeg = require('./ffmpeg')
 const svgo = require('./svgo')
 
 const PIPELINES = {
@@ -17,7 +18,14 @@ const PIPELINES = {
   '.avif': [magick.avif],
   '.heic': [magick.heic],
   '.heif': [magick.heif],
-  '.jxl': [magick.jxl]
+  '.jxl': [magick.jxl],
+  '.mp4': [ffmpeg.mp4],
+  '.m4v': [ffmpeg.m4v],
+  '.mov': [ffmpeg.mov],
+  '.webm': [ffmpeg.webm],
+  '.mkv': [ffmpeg.mkv],
+  '.avi': [ffmpeg.avi],
+  '.ogv': [ffmpeg.ogv]
 }
 
 const getPipeline = filePath => {
