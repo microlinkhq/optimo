@@ -11,16 +11,18 @@ const formatBytes = require('./util/format-bytes')
 const parseResize = require('./util/parse-resize')
 const percentage = require('./util/percentage')
 const formatLog = require('./util/format-log')
+const getMediaKind = require('./util/get-media-kind')
 const debug = require('./util/debug')
 
-const runStepInPlaceIfSmaller = async ({ currentPath, extension, step }) => {
+const runStepInPlaceIfSmaller = async ({ currentPath, extension, step, mute }) => {
   const candidatePath = `${currentPath}.candidate${extension}`
 
   await step({
     inputPath: currentPath,
     outputPath: candidatePath,
     resizeConfig: null,
-    losy: false
+    losy: false,
+    mute
   })
 
   const [currentSize, candidateSize] = await Promise.all([
@@ -36,20 +38,22 @@ const runStepInPlaceIfSmaller = async ({ currentPath, extension, step }) => {
   }
 }
 
-const executePipeline = async ({ pipeline, filePath, optimizedPath, resizeConfig, losy }) => {
+const executePipeline = async ({ pipeline, filePath, optimizedPath, resizeConfig, losy, mute }) => {
   const extension = path.extname(optimizedPath) || '.tmp'
 
   await pipeline[0]({
     inputPath: filePath,
     outputPath: optimizedPath,
     resizeConfig,
-    losy
+    losy,
+    mute
   })
 
   for (const step of pipeline.slice(1)) {
     await runStepInPlaceIfSmaller({
       currentPath: optimizedPath,
       extension,
+      mute,
       step: async args => step({ ...args, losy })
     })
   }
@@ -57,14 +61,38 @@ const executePipeline = async ({ pipeline, filePath, optimizedPath, resizeConfig
   return (await stat(optimizedPath)).size
 }
 
-const file = async (filePath, { onLogs = () => {}, dryRun, format: outputFormat, resize, losy = false } = {}) => {
+const file = async (
+  filePath,
+  { onLogs = () => {}, dryRun, format: outputFormat, resize, losy = false, mute = true } = {}
+) => {
   const outputPath = getOutputPath(filePath, outputFormat)
   const resizeConfig = parseResize(resize)
+  const mediaKind = getMediaKind(outputPath)
   const filePipeline = getPipeline(outputPath)
   const executionPipeline = [...filePipeline]
+  const isConverting = outputPath !== filePath
+  const outputExt = path.extname(outputPath).toLowerCase()
+
+  const canUseJpegLosslessFastPath =
+    !losy &&
+    !resizeConfig &&
+    !isConverting &&
+    (outputExt === '.jpg' || outputExt === '.jpeg') &&
+    executionPipeline[0]?.binaryName === 'magick' &&
+    executionPipeline[1]?.binaryName === 'mozjpegtran'
+
+  if (canUseJpegLosslessFastPath) {
+    executionPipeline.shift()
+  }
+
+  if (mediaKind === 'video' && resizeConfig?.mode === 'max-size') {
+    throw new TypeError(
+      'Resize max size (e.g. 100kB) is image-only. For videos use percentage (50%), width (w960), or height (h480).'
+    )
+  }
 
   const needsMagickForTransform = Boolean(resizeConfig) || outputPath !== filePath
-  if (needsMagickForTransform && executionPipeline[0]?.binaryName !== 'magick') {
+  if (mediaKind === 'image' && needsMagickForTransform && executionPipeline[0]?.binaryName !== 'magick') {
     const magick = require('./compressor/magick')
     const ext = path.extname(outputPath).toLowerCase().replace(/^\./, '')
     const magickStep = magick[ext] || magick.file
@@ -78,7 +106,6 @@ const file = async (filePath, { onLogs = () => {}, dryRun, format: outputFormat,
   )
 
   const optimizedPath = `${outputPath}.optimized${path.extname(outputPath)}`
-  const isConverting = outputPath !== filePath
 
   let originalSize
   let optimizedSize
@@ -95,7 +122,8 @@ const file = async (filePath, { onLogs = () => {}, dryRun, format: outputFormat,
         filePath,
         optimizedPath,
         resizeConfig,
-        losy
+        losy,
+        mute
       })
     }
   } catch (error) {

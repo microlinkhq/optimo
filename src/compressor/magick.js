@@ -10,6 +10,7 @@ const resolveBinary = require('../util/resolve-binary')
 const binaryPath = resolveBinary('magick')
 
 const PNG_QUALITY_CANDIDATES = [91, 94, 95, 97]
+const PNG_COMPRESSION_STRATEGY_CANDIDATES = [null, 0]
 
 const withMeta = (format, fn) => {
   const wrapped = async ctx => fn(ctx)
@@ -89,31 +90,36 @@ const isAnimatedPng = ({ filePath }) => {
 }
 
 const writePng = async ({ inputPath, outputPath, flags, resizeGeometry }) => {
-  const writeCandidates = isAnimatedPng({ filePath: inputPath }) ? [90] : PNG_QUALITY_CANDIDATES
+  const animated = isAnimatedPng({ filePath: inputPath })
+  const writeCandidates = animated ? [90] : PNG_QUALITY_CANDIDATES
+  const strategyCandidates = animated ? [null] : PNG_COMPRESSION_STRATEGY_CANDIDATES
   const candidatePaths = []
   let bestPath = null
   let bestSize = Number.POSITIVE_INFINITY
 
   try {
     for (const quality of writeCandidates) {
-      const candidatePath = `${outputPath}.q${quality}.png`
-      candidatePaths.push(candidatePath)
+      for (const compressionStrategy of strategyCandidates) {
+        const candidatePath = `${outputPath}.q${quality}${compressionStrategy === null ? '' : `.s${compressionStrategy}`}.png`
+        candidatePaths.push(candidatePath)
 
-      const args = [
-        inputPath,
-        ...(resizeGeometry ? ['-resize', resizeGeometry] : []),
-        ...flags,
-        '-quality',
-        String(quality),
-        candidatePath
-      ]
+        const args = [
+          inputPath,
+          ...(resizeGeometry ? ['-resize', resizeGeometry] : []),
+          ...flags,
+          ...(compressionStrategy === null ? [] : ['-define', `png:compression-strategy=${compressionStrategy}`]),
+          '-quality',
+          String(quality),
+          candidatePath
+        ]
 
-      await $(binaryPath, args)
-      const size = (await stat(candidatePath)).size
+        await $(binaryPath, args)
+        const size = (await stat(candidatePath)).size
 
-      if (size < bestSize) {
-        bestSize = size
-        bestPath = candidatePath
+        if (size < bestSize) {
+          bestSize = size
+          bestPath = candidatePath
+        }
       }
     }
 

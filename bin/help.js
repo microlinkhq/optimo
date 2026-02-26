@@ -8,7 +8,7 @@ Usage
   $ ${blue('optimo')} <file|dir> [options]
 
 Options
-  -l, --losy  Enable lossy + lossless pass (ImgBot-style aggressive mode)
+  -l, --losy  Enable lossy + lossless passes (default: false)
   -m, --mute  Remove audio tracks from videos (default: true)
   -d, --dry-run  Show what would be optimized without making changes
   -f, --format   Convert output format (e.g. jpeg, webp, avif)
