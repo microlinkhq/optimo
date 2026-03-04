@@ -4,8 +4,10 @@
   "homepage": "https://github.com/kikobeats/optimo",
   "version": "0.0.17",
   "exports": {
-    ".": "./src/index.js"
+    ".": "./src/index.js",
+    "./types": "./index.d.ts"
   },
+  "types": "./index.d.ts",
   "bin": {
     "optimo": "bin/index.js"
   },
@@ -61,7 +63,8 @@
   },
   "files": [
     "bin",
-    "src"
+    "src",
+    "index.d.ts"
   ],
   "scripts": {
     "clean": "rm -rf node_modules",
