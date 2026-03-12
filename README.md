@@ -28,6 +28,7 @@ npx -y optimo public/media/banner.png --resize 50% # resize + optimize
 npx -y optimo public/media/banner.png --resize 100kB # resize to max file size
 npx -y optimo public/media/banner.png --resize w960 # resize to max width
 npx -y optimo public/media/banner.png --resize h480 # resize to max height
+npx -y optimo public/media/banner.png --data-url # print optimized image as data URL
 npx -y optimo public/media/banner.heic --dry-run --verbose # inspect unsupported failures
 npx -y optimo public/media/clip.mp4 # optimize a video
 npx -y optimo public/media/clip.mp4 --mute # optimize and remove audio
@@ -51,6 +52,7 @@ Mode behavior:
 - default: lossless-first pipeline.
 - `-l, --losy`: lossy + lossless pass per matching compressor.
 - `-m, --mute`: remove audio tracks from video outputs (default: `true`; use `--mute false` to keep audio).
+- `-u, --data-url`: return optimized image as data URL (single file only; image only).
 - `-v, --verbose`: print debug logs (selected pipeline, binaries, executed commands, and errors).
 
 
@@ -94,6 +96,13 @@ await optimo.file('/absolute/path/video.mp4', {
   resize: 'w1280',
   onLogs: console.log
 })
+
+const { dataUrl } = await optimo.file('/absolute/path/image.jpg', {
+  dataUrl: true,
+  onLogs: console.log
+})
+
+console.log(dataUrl) // data:image/jpeg;base64,...
 
 // optimize a dir recursively
 const result = await optimo.dir('/absolute/path/images')

@@ -1,17 +1,18 @@
 'use strict'
 
-const { stat, unlink, rename, readdir, copyFile } = require('node:fs/promises')
+const { stat, unlink, rename, readdir, copyFile, readFile } = require('node:fs/promises')
 const path = require('node:path')
 
 const { getPipeline, getRequiredBinaries } = require('./compressor')
 const ensureBinaries = require('./util/ensure-binaries')
 const { yellow, gray, green } = require('./util/colors')
 const getOutputPath = require('./util/get-output-path')
+const getMediaKind = require('./util/get-media-kind')
 const formatBytes = require('./util/format-bytes')
 const parseResize = require('./util/parse-resize')
+const toDataUrl = require('./util/to-data-url')
 const percentage = require('./util/percentage')
 const formatLog = require('./util/format-log')
-const getMediaKind = require('./util/get-media-kind')
 const debug = require('./util/debug')
 
 const runStepInPlaceIfSmaller = async ({ currentPath, extension, step, mute }) => {
@@ -63,7 +64,7 @@ const executePipeline = async ({ pipeline, filePath, optimizedPath, resizeConfig
 
 const file = async (
   filePath,
-  { onLogs = () => {}, dryRun, format: outputFormat, resize, losy = false, mute = true } = {}
+  { onLogs = () => {}, dryRun, format: outputFormat, resize, losy = false, mute = true, dataUrl = false } = {}
 ) => {
   const outputPath = getOutputPath(filePath, outputFormat)
   const resizeConfig = parseResize(resize)
@@ -89,6 +90,10 @@ const file = async (
     throw new TypeError(
       'Resize max size (e.g. 100kB) is image-only. For videos use percentage (50%), width (w960), or height (h480).'
     )
+  }
+
+  if (dataUrl && mediaKind !== 'image') {
+    throw new TypeError('Data URL output is only supported for images.')
   }
 
   const needsMagickForTransform = Boolean(resizeConfig) || outputPath !== filePath
@@ -151,7 +156,24 @@ const file = async (
   if (!isConverting && optimizedSize >= originalSize) {
     await unlink(optimizedPath)
     onLogs(formatLog('[optimized]', gray, filePath))
-    return { originalSize, optimizedSize: originalSize }
+
+    const result = { originalSize, optimizedSize: originalSize }
+    if (dataUrl) {
+      result.dataUrl = toDataUrl({
+        filePath,
+        content: await readFile(filePath)
+      })
+    }
+
+    return result
+  }
+
+  let outputDataUrl = null
+  if (dataUrl) {
+    outputDataUrl = toDataUrl({
+      filePath: outputPath,
+      content: await readFile(optimizedPath)
+    })
   }
 
   if (dryRun) {
@@ -182,10 +204,16 @@ const file = async (
     )
   )
 
-  return { originalSize, optimizedSize }
+  const result = { originalSize, optimizedSize }
+  if (outputDataUrl) result.dataUrl = outputDataUrl
+  return result
 }
 
 const dir = async (folderPath, opts) => {
+  if (opts?.dataUrl) {
+    throw new TypeError('Data URL output is only supported when optimizing a single image file.')
+  }
+
   const items = (await readdir(folderPath, { withFileTypes: true })).filter(item => !item.name.startsWith('.'))
   let totalOriginalSize = 0
   let totalOptimizedSize = 0
