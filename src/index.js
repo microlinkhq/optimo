@@ -11,7 +11,6 @@ const getMediaKind = require('./util/get-media-kind')
 const formatBytes = require('./util/format-bytes')
 const parseResize = require('./util/parse-resize')
 const toDataUrl = require('./util/to-data-url')
-const percentage = require('./util/percentage')
 const formatLog = require('./util/format-log')
 const debug = require('./util/debug')
 
@@ -196,13 +195,10 @@ const file = async (
     }
   }
 
-  onLogs(
-    formatLog(
-      `[${percentage(optimizedSize, originalSize)}%]`,
-      green,
-      isConverting ? `${filePath} -> ${outputPath}` : filePath
-    )
-  )
+  const bytesSaved = originalSize - optimizedSize
+  const bytesSavedLabel = bytesSaved >= 0 ? `[-${formatBytes(bytesSaved)}]` : `[+${formatBytes(Math.abs(bytesSaved))}]`
+
+  onLogs(formatLog(bytesSavedLabel, green, isConverting ? `${filePath} -> ${outputPath}` : filePath))
 
   const result = { originalSize, optimizedSize }
   if (outputDataUrl) result.dataUrl = outputDataUrl
