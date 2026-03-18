@@ -1,3 +1,8 @@
+## 0.0.23 (2026-03-18)
+
+### Bug Fixes
+
+* make WebP and HEIC optimization idempotent in a single run ([af62dac](https://github.com/kikobeats/optimo/commit/af62dac4d80896816b0bb89e1f29b09c5a01b33b))
 ## 0.0.22 (2026-03-18)
 ## 0.0.21 (2026-03-17)
 ## 0.0.20 (2026-03-17)
