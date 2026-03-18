@@ -2,7 +2,7 @@
   "name": "optimo",
   "description": "The no-brainer CLI for optimizing images and videos",
   "homepage": "https://github.com/kikobeats/optimo",
-  "version": "0.0.21",
+  "version": "0.0.22",
   "exports": {
     ".": "./src/index.js"
   },
