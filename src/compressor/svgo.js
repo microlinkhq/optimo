@@ -1,6 +1,6 @@
 'use strict'
 
-const { unlink } = require('node:fs/promises')
+const { writeFile, unlink } = require('node:fs/promises')
 const $ = require('tinyspawn')
 
 const resolveBinary = require('../util/resolve-binary')
@@ -15,83 +15,57 @@ const withMeta = (format, fn) => {
   return wrapped
 }
 
-const COMMON_PLUGINS = [
-  'cleanupAttrs',
-  'cleanupListOfValues',
-  'cleanupNumericValues',
-  'convertColors',
-  'minifyStyles',
-  'moveGroupAttrsToElems',
-  'removeComments',
-  'removeDoctype',
-  'removeEditorsNSData',
-  'removeEmptyAttrs',
-  'removeEmptyContainers',
-  'removeEmptyText',
-  'removeNonInheritableGroupAttrs',
-  'removeXMLProcInst',
-  'sortAttrs'
+const EXTRA_COMMON_PLUGINS = [
+  'cleanupListOfValues'
 ]
 
-const AGGRESSIVE_PLUGINS = COMMON_PLUGINS.concat([
-  'cleanupEnableBackground',
-  'cleanupIDs',
-  'collapseGroups',
-  'convertPathData',
-  'convertShapeToPath',
-  'convertTransform',
-  'mergePaths',
-  'moveElemsAttrsToGroup',
+const EXTRA_AGGRESSIVE_PLUGINS = EXTRA_COMMON_PLUGINS.concat([
   'removeAttrs',
-  'removeDesc',
   'removeDimensions',
   'removeElementsByAttr',
-  'removeHiddenElems',
-  'removeMetadata',
   'removeRasterImages',
   'removeStyleElement',
   'removeTitle',
-  'removeUnknownsAndDefaults',
-  'removeUnusedNS',
-  'removeUselessDefs',
-  'removeUselessStrokeAndFill',
   'removeViewBox',
   'removeXMLNS'
 ])
 
-const run = async ({ inputPath, outputPath, plugins }) =>
-  $(binaryPath, [
-    inputPath,
-    '--config={"full":true}',
-    '--multipass',
-    `--enable=${plugins.join(',')}`,
-    '--output',
-    outputPath
-  ])
+const buildConfigContent = plugins =>
+  `module.exports = ${JSON.stringify({ multipass: true, plugins: ['preset-default', ...plugins] })}\n`
+
+const run = async ({ inputPath, outputPath, extraPlugins }) => {
+  const configPath = `${outputPath}.svgo.config.cjs`
+  try {
+    await writeFile(configPath, buildConfigContent(extraPlugins))
+    await $(binaryPath, [
+      inputPath,
+      '--config',
+      configPath,
+      '--output',
+      outputPath
+    ])
+  } finally {
+    try { await unlink(configPath) } catch {}
+  }
+}
 
 const svg = withMeta('svg', async ({ inputPath, outputPath, losy = false }) => {
-  if (!losy) return run({ inputPath, outputPath, plugins: COMMON_PLUGINS })
+  if (!losy) return run({ inputPath, outputPath, extraPlugins: EXTRA_COMMON_PLUGINS })
 
   const lossyPath = `${outputPath}.lossy.svg`
   try {
     await run({
       inputPath,
       outputPath: lossyPath,
-      plugins: AGGRESSIVE_PLUGINS
+      extraPlugins: EXTRA_AGGRESSIVE_PLUGINS
     })
     await run({
       inputPath: lossyPath,
       outputPath,
-      plugins: COMMON_PLUGINS
+      extraPlugins: EXTRA_COMMON_PLUGINS
     })
   } finally {
-    try {
-      await unlink(lossyPath)
-    } catch (error) {
-      if (error.code !== 'ENOENT') {
-        // Ignore cleanup failures.
-      }
-    }
+    try { await unlink(lossyPath) } catch {}
   }
 })
 
