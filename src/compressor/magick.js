@@ -9,14 +9,41 @@ const resolveBinary = require('../util/resolve-binary')
 
 const binaryPath = resolveBinary('magick')
 
+let delegateCache
+const hasMagickDelegate = delegate => {
+  if (!binaryPath) return false
+  if (!delegateCache) {
+    try {
+      delegateCache = execFileSync(binaryPath, ['identify', '-list', 'format'], {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore']
+      })
+    } catch {
+      delegateCache = ''
+    }
+  }
+  return new RegExp(`^\\s*${delegate}\\*?\\s`, 'im').test(delegateCache)
+}
+
 const PNG_QUALITY_CANDIDATES = [91, 94, 95, 97]
 const PNG_COMPRESSION_STRATEGY_CANDIDATES = [null, 0]
 
-const withMeta = (format, fn) => {
+const withMeta = (format, fn, { delegate } = {}) => {
   const wrapped = async ctx => fn(ctx)
   wrapped.binaryName = 'magick'
   wrapped.binaryPath = binaryPath
   wrapped.format = format
+
+  if (delegate) {
+    wrapped.getRequiredBinaries = () => {
+      const binaries = [{ name: 'magick', binaryPath: binaryPath || false }]
+      if (binaryPath && !hasMagickDelegate(delegate)) {
+        binaries.push({ name: `magick:${delegate}`, binaryPath: false })
+      }
+      return binaries
+    }
+  }
+
   return wrapped
 }
 
@@ -262,7 +289,7 @@ const webp = withMeta('webp', run)
 const avif = withMeta('avif', run)
 const heic = withMeta('heic', run)
 const heif = withMeta('heif', run)
-const jxl = withMeta('jxl', run)
+const jxl = withMeta('jxl', run, { delegate: 'jxl' })
 const svg = withMeta('svg', run)
 const file = withMeta('file', run)
 

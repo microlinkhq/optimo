@@ -12,16 +12,13 @@ test('ensureBinaries does not throw when all binaries are present', t => {
   )
 })
 
-test('ensureBinaries throws with missing binary names', t => {
-  const error = t.throws(() =>
-    ensureBinaries([
-      { name: 'magick', binaryPath: false },
-      { name: 'svgo', binaryPath: false }
-    ])
-  )
+test('ensureBinaries returns missing binaries', t => {
+  const missing = ensureBinaries([
+    { name: 'magick', binaryPath: false },
+    { name: 'svgo', binaryPath: false }
+  ])
 
-  t.true(error instanceof Error)
-  t.true(error.message.includes('Missing required binaries'))
-  t.true(error.message.includes('magick'))
-  t.true(error.message.includes('svgo'))
+  t.is(missing.length, 2)
+  t.is(missing[0].name, 'magick')
+  t.is(missing[1].name, 'svgo')
 })

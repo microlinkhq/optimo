@@ -10,7 +10,8 @@ const INSTALL_HINTS = {
   magick: 'brew install imagemagick',
   ffmpeg: 'brew install ffmpeg',
   gifsicle: 'brew install gifsicle',
-  'mozjpegtran/jpegtran': 'brew install mozjpeg'
+  'mozjpegtran/jpegtran': 'brew install mozjpeg',
+  'magick:jxl': 'brew install imagemagick-full && brew link --overwrite --force imagemagick-full'
 }
 
 async function main () {
