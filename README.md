@@ -1,9 +1,9 @@
 <div align="center">
   <br>
-  <img style="width: 500px; margin:3rem 0 1.5rem;" src="https://github.com/Kikobeats/optimo/raw/master/media/banner.jpg" alt="optimo">
+  <img style="width: 500px; margin:3rem 0 1.5rem;" src="https://github.com/microlinkhq/optimo/raw/master/examples/banner.jpg" alt="optimo">
   <br><br>
   <a href="https://microlink.io"><img src="https://img.shields.io/badge/powered_by-microlink.io-blue?style=flat-square&color=%23EA407B" alt="Powered by microlink.io"></a>
-  <img alt="Last version" src="https://img.shields.io/github/tag/kikobeats/optimo.svg?style=flat-square">
+  <img alt="Last version" src="https://img.shields.io/github/tag/microlinkhq/optimo.svg?style=flat-square">
   <a href="https://www.npmjs.org/package/optimo"><img alt="NPM Status" src="https://img.shields.io/npm/dm/optimo.svg?style=flat-square"></a>
   <br><br>
   optimo reduces media file size aggressively, and safely.
