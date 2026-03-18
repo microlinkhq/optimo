@@ -103,11 +103,18 @@ const file = async (
     executionPipeline.unshift(magickStep)
   }
 
-  ensureBinaries(
+  const missingBinaries = ensureBinaries(
     getRequiredBinaries(executionPipeline, {
       losy
     })
   )
+
+  if (missingBinaries.length > 0) {
+    const names = missingBinaries.map(binary => binary.name)
+    debug.warn('file=optimize stage=missing-binaries', { filePath, binaries: names.join(', ') })
+    onLogs(formatLog('[skipped]', yellow, filePath))
+    return { originalSize: 0, optimizedSize: 0, missingBinaries: names }
+  }
 
   const optimizedPath = `${outputPath}.optimized${path.extname(outputPath)}`
 
@@ -213,6 +220,7 @@ const dir = async (folderPath, opts) => {
   const items = (await readdir(folderPath, { withFileTypes: true })).filter(item => !item.name.startsWith('.'))
   let totalOriginalSize = 0
   let totalOptimizedSize = 0
+  const allMissingBinaries = new Set()
 
   for (const item of items) {
     const itemPath = path.join(folderPath, item.name)
@@ -221,17 +229,20 @@ const dir = async (folderPath, opts) => {
       const subResult = await dir(itemPath, opts)
       totalOriginalSize += subResult.originalSize
       totalOptimizedSize += subResult.optimizedSize
+      if (subResult.missingBinaries) subResult.missingBinaries.forEach(b => allMissingBinaries.add(b))
     } else {
       const result = await file(itemPath, opts)
       totalOriginalSize += result.originalSize
       totalOptimizedSize += result.optimizedSize
+      if (result.missingBinaries) result.missingBinaries.forEach(b => allMissingBinaries.add(b))
     }
   }
 
   return {
     originalSize: totalOriginalSize,
     optimizedSize: totalOptimizedSize,
-    savings: totalOriginalSize - totalOptimizedSize
+    savings: totalOriginalSize - totalOptimizedSize,
+    ...(allMissingBinaries.size > 0 && { missingBinaries: [...allMissingBinaries] })
   }
 }
 
