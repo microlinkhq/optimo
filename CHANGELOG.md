@@ -1,3 +1,8 @@
+## 0.0.24 (2026-03-18)
+
+### Bug Fixes
+
+* better jxl installation hint ([a9f3af2](https://github.com/kikobeats/optimo/commit/a9f3af20235c15dcb688d11cf532aab5445f5471))
 ## 0.0.23 (2026-03-18)
 
 ### Bug Fixes
