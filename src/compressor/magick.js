@@ -47,11 +47,13 @@ const MAGICK_PNG_LOSSY_FLAGS = [
 
 const MAGICK_GIF_FLAGS = ['-strip', '-coalesce', '-layers', 'OptimizePlus']
 
-const MAGICK_WEBP_FLAGS = ['-strip', '-define', 'webp:method=6', '-define', 'webp:thread-level=1', '-quality', '80']
+const MAGICK_WEBP_LOSSY_FLAGS = ['-strip', '-define', 'webp:method=6', '-define', 'webp:thread-level=1', '-quality', '80']
+const MAGICK_WEBP_LOSSLESS_FLAGS = ['-strip', '-define', 'webp:method=6', '-define', 'webp:thread-level=1', '-quality', '100']
 
 const MAGICK_AVIF_FLAGS = ['-strip', '-define', 'heic:speed=1', '-quality', '50']
 
-const MAGICK_HEIC_FLAGS = ['-strip', '-quality', '75']
+const MAGICK_HEIC_LOSSY_FLAGS = ['-strip', '-quality', '75']
+const MAGICK_HEIC_LOSSLESS_FLAGS = ['-strip', '-quality', '100']
 
 const MAGICK_JXL_FLAGS = ['-strip', '-define', 'jxl:effort=9', '-quality', '75']
 
@@ -63,9 +65,9 @@ const flagsByExt = ({ ext, losy = false }) => {
   if (ext === '.jpg' || ext === '.jpeg') return losy ? MAGICK_JPEG_LOSSY_FLAGS : MAGICK_JPEG_LOSSLESS_FLAGS
   if (ext === '.png') return losy ? MAGICK_PNG_LOSSY_FLAGS : MAGICK_PNG_LOSSLESS_FLAGS
   if (ext === '.gif') return MAGICK_GIF_FLAGS
-  if (ext === '.webp') return MAGICK_WEBP_FLAGS
+  if (ext === '.webp') return losy ? MAGICK_WEBP_LOSSY_FLAGS : MAGICK_WEBP_LOSSLESS_FLAGS
   if (ext === '.avif') return MAGICK_AVIF_FLAGS
-  if (ext === '.heic' || ext === '.heif') return MAGICK_HEIC_FLAGS
+  if (ext === '.heic' || ext === '.heif') return losy ? MAGICK_HEIC_LOSSY_FLAGS : MAGICK_HEIC_LOSSLESS_FLAGS
   if (ext === '.jxl') return MAGICK_JXL_FLAGS
   if (ext === '.svg') return MAGICK_SVG_FLAGS
   return MAGICK_GENERIC_FLAGS
