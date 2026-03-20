@@ -36,6 +36,7 @@
     "video-optimizer"
   ],
   "dependencies": {
+    "debug": "~4.4.3",
     "debug-logfmt": "~1.4.7",
     "mri": "~1.2.0",
     "tinyspawn": "~1.5.5"
