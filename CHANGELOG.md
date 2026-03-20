@@ -1,3 +1,8 @@
+## 0.0.25 (2026-03-20)
+
+### Bug Fixes
+
+* debug dependency ([4cae58f](https://github.com/kikobeats/optimo/commit/4cae58fd386666085891e22453a56a5e2ddc57b3)), closes [#12](https://github.com/kikobeats/optimo/issues/12)
 ## 0.0.24 (2026-03-18)
 
 ### Bug Fixes
