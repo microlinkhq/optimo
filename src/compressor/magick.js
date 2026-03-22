@@ -86,13 +86,13 @@ const MAGICK_SVG_FLAGS = []
 
 const MAGICK_GENERIC_FLAGS = []
 
-const flagsByExt = ({ ext, losy = false, preserveExif = false }) => {
-  if (ext === '.jpg' || ext === '.jpeg') return losy ? MAGICK_JPEG_LOSSY_FLAGS : MAGICK_JPEG_LOSSLESS_FLAGS
-  if (ext === '.png') return losy && !preserveExif ? MAGICK_PNG_LOSSY_FLAGS : MAGICK_PNG_LOSSLESS_FLAGS
+const flagsByExt = ({ ext, lossy = false, preserveExif = false }) => {
+  if (ext === '.jpg' || ext === '.jpeg') return lossy ? MAGICK_JPEG_LOSSY_FLAGS : MAGICK_JPEG_LOSSLESS_FLAGS
+  if (ext === '.png') return lossy && !preserveExif ? MAGICK_PNG_LOSSY_FLAGS : MAGICK_PNG_LOSSLESS_FLAGS
   if (ext === '.gif') return MAGICK_GIF_FLAGS
-  if (ext === '.webp') return losy ? MAGICK_WEBP_LOSSY_FLAGS : MAGICK_WEBP_LOSSLESS_FLAGS
+  if (ext === '.webp') return lossy ? MAGICK_WEBP_LOSSY_FLAGS : MAGICK_WEBP_LOSSLESS_FLAGS
   if (ext === '.avif') return MAGICK_AVIF_FLAGS
-  if (ext === '.heic' || ext === '.heif') return losy ? MAGICK_HEIC_LOSSY_FLAGS : MAGICK_HEIC_LOSSLESS_FLAGS
+  if (ext === '.heic' || ext === '.heif') return lossy ? MAGICK_HEIC_LOSSY_FLAGS : MAGICK_HEIC_LOSSLESS_FLAGS
   if (ext === '.jxl') return MAGICK_JXL_FLAGS
   if (ext === '.svg') return MAGICK_SVG_FLAGS
   return MAGICK_GENERIC_FLAGS
@@ -167,9 +167,9 @@ const writePng = async ({ inputPath, outputPath, flags, resizeGeometry }) => {
   }
 }
 
-const runOnce = async ({ inputPath, outputPath, resizeGeometry, losy = false, preserveExif = false }) => {
+const runOnce = async ({ inputPath, outputPath, resizeGeometry, lossy = false, preserveExif = false }) => {
   const ext = path.extname(outputPath).toLowerCase()
-  const flags = [...(preserveExif ? [] : ['-strip']), ...flagsByExt({ ext, losy, preserveExif })]
+  const flags = [...(preserveExif ? [] : ['-strip']), ...flagsByExt({ ext, lossy, preserveExif })]
 
   if (ext === '.png') {
     return writePng({ inputPath, outputPath, flags, resizeGeometry })
@@ -178,7 +178,7 @@ const runOnce = async ({ inputPath, outputPath, resizeGeometry, losy = false, pr
   return $(binaryPath, [inputPath, ...(resizeGeometry ? ['-resize', resizeGeometry] : []), ...flags, outputPath])
 }
 
-const runMaxSize = async ({ inputPath, outputPath, maxSize, losy = false, preserveExif = false }) => {
+const runMaxSize = async ({ inputPath, outputPath, maxSize, lossy = false, preserveExif = false }) => {
   const resultByScale = new Map()
 
   const measureScale = async scale => {
@@ -191,7 +191,7 @@ const runMaxSize = async ({ inputPath, outputPath, maxSize, losy = false, preser
       inputPath,
       outputPath: candidatePath,
       resizeGeometry,
-      losy,
+      lossy,
       preserveExif
     })
 
@@ -237,23 +237,23 @@ const runMaxSize = async ({ inputPath, outputPath, maxSize, losy = false, preser
   }
 }
 
-const run = async ({ inputPath, outputPath, resizeConfig, losy = false, preserveExif = false }) => {
+const run = async ({ inputPath, outputPath, resizeConfig, lossy = false, preserveExif = false }) => {
   if (resizeConfig?.mode === 'max-size') {
     return runMaxSize({
       inputPath,
       outputPath,
       maxSize: resizeConfig.value,
-      losy,
+      lossy,
       preserveExif
     })
   }
 
-  if (!losy) {
+  if (!lossy) {
     return runOnce({
       inputPath,
       outputPath,
       resizeGeometry: resizeConfig?.value,
-      losy: false,
+      lossy: false,
       preserveExif
     })
   }
@@ -264,13 +264,13 @@ const run = async ({ inputPath, outputPath, resizeConfig, losy = false, preserve
       inputPath,
       outputPath: lossyPath,
       resizeGeometry: resizeConfig?.value,
-      losy: true,
+      lossy: true,
       preserveExif
     })
     await runOnce({
       inputPath: lossyPath,
       outputPath,
-      losy: false,
+      lossy: false,
       preserveExif
     })
   } finally {

@@ -49,8 +49,8 @@ const run = async ({ inputPath, outputPath, extraPlugins }) => {
   }
 }
 
-const svg = withMeta('svg', async ({ inputPath, outputPath, losy = false }) => {
-  if (!losy) return run({ inputPath, outputPath, extraPlugins: EXTRA_COMMON_PLUGINS })
+const svg = withMeta('svg', async ({ inputPath, outputPath, lossy = false }) => {
+  if (!lossy) return run({ inputPath, outputPath, extraPlugins: EXTRA_COMMON_PLUGINS })
 
   const lossyPath = `${outputPath}.lossy.svg`
   try {

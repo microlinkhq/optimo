@@ -23,7 +23,7 @@
 ```bash
 npx -y optimo public/media            # for a directory
 npx -y optimo public/media/banner.png # for a file
-npx -y optimo public/media/banner.png --losy # enable lossy + lossless mode
+npx -y optimo public/media/banner.png --lossy # enable lossy + lossless mode
 npx -y optimo public/media/banner.png --format jpeg # convert + optimize
 npx -y optimo public/media/banner.png --resize 50% # resize + optimize
 npx -y optimo public/media/banner.png --resize 100kB # resize to max file size
@@ -52,7 +52,7 @@ When `optimo` is executed, a pipeline of compressors is chosen based on the outp
 Mode behavior:
 
 - default: lossless-first pipeline.
-- `-l, --losy`: lossy + lossless pass per matching compressor.
+- `-l, --lossy`: lossy + lossless pass per matching compressor.
 - `-m, --mute`: remove audio tracks from video outputs (default: `true`; use `--mute false` to keep audio).
 - `-p, --preserve-exif`: preserve EXIF metadata on image outputs (default: `false`).
 - `-u, --data-url`: return optimized image as data URL (single file only; image only).
@@ -75,7 +75,7 @@ const optimo = require('optimo')
 // optimize a single file
 await optimo.file('/absolute/path/image.jpg', {
   dryRun: false,
-  losy: false,
+  lossy: false,
   preserveExif: false,
   format: 'webp',
   resize: '50%',
@@ -93,7 +93,7 @@ await optimo.file('/absolute/path/image.jpg', {
 })
 
 await optimo.file('/absolute/path/video.mp4', {
-  losy: true,
+  lossy: true,
   // mute defaults to true for videos; set false to keep audio
   mute: false,
   format: 'webm',
