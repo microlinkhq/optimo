@@ -14,7 +14,7 @@ const toDataUrl = require('./util/to-data-url')
 const formatLog = require('./util/format-log')
 const debug = require('./util/debug')
 
-const runStepInPlaceIfSmaller = async ({ currentPath, extension, step, mute }) => {
+const runStepInPlaceIfSmaller = async ({ currentPath, extension, step, mute, preserveExif }) => {
   const candidatePath = `${currentPath}.candidate${extension}`
 
   await step({
@@ -22,7 +22,8 @@ const runStepInPlaceIfSmaller = async ({ currentPath, extension, step, mute }) =
     outputPath: candidatePath,
     resizeConfig: null,
     losy: false,
-    mute
+    mute,
+    preserveExif
   })
 
   const [currentSize, candidateSize] = await Promise.all([
@@ -38,7 +39,7 @@ const runStepInPlaceIfSmaller = async ({ currentPath, extension, step, mute }) =
   }
 }
 
-const executePipeline = async ({ pipeline, filePath, optimizedPath, resizeConfig, losy, mute }) => {
+const executePipeline = async ({ pipeline, filePath, optimizedPath, resizeConfig, losy, mute, preserveExif }) => {
   const extension = path.extname(optimizedPath) || '.tmp'
 
   await pipeline[0]({
@@ -46,7 +47,8 @@ const executePipeline = async ({ pipeline, filePath, optimizedPath, resizeConfig
     outputPath: optimizedPath,
     resizeConfig,
     losy,
-    mute
+    mute,
+    preserveExif
   })
 
   for (const step of pipeline.slice(1)) {
@@ -54,7 +56,8 @@ const executePipeline = async ({ pipeline, filePath, optimizedPath, resizeConfig
       currentPath: optimizedPath,
       extension,
       mute,
-      step: async args => step({ ...args, losy })
+      preserveExif,
+      step: async args => step({ ...args, losy, preserveExif })
     })
   }
 
@@ -63,7 +66,7 @@ const executePipeline = async ({ pipeline, filePath, optimizedPath, resizeConfig
 
 const file = async (
   filePath,
-  { onLogs = () => {}, dryRun, format: outputFormat, resize, losy = false, mute = true, dataUrl = false } = {}
+  { onLogs = () => {}, dryRun, format: outputFormat, resize, losy = false, mute = true, preserveExif = false, dataUrl = false } = {}
 ) => {
   const outputPath = getOutputPath(filePath, outputFormat)
   const resizeConfig = parseResize(resize)
@@ -105,7 +108,8 @@ const file = async (
 
   const missingBinaries = ensureBinaries(
     getRequiredBinaries(executionPipeline, {
-      losy
+      losy,
+      preserveExif
     })
   )
 
@@ -134,7 +138,8 @@ const file = async (
         optimizedPath,
         resizeConfig,
         losy,
-        mute
+        mute,
+        preserveExif
       })
     }
   } catch (error) {

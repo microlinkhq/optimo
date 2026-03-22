@@ -15,6 +15,7 @@
 - Safety guard: if optimized output is not smaller, original file is kept.
 - Backed by proven tools: ImageMagick, SVGO, Gifsicle, MozJPEG, and FFmpeg.
 - Supports image and video optimization.
+- Strips metadata by default for smaller outputs.
 - Resizing supports percentage values (`50%`), max file size targets (`100kB`, images only), width (`w960`), & height (`h480`).
 
 ## Usage
@@ -28,6 +29,7 @@ npx -y optimo public/media/banner.png --resize 50% # resize + optimize
 npx -y optimo public/media/banner.png --resize 100kB # resize to max file size
 npx -y optimo public/media/banner.png --resize w960 # resize to max width
 npx -y optimo public/media/banner.png --resize h480 # resize to max height
+npx -y optimo public/media/banner.jpg --preserve-exif # keep EXIF metadata
 npx -y optimo public/media/banner.png --data-url # print optimized image as data URL
 npx -y optimo public/media/banner.heic --dry-run --verbose # inspect unsupported failures
 npx -y optimo public/media/clip.mp4 # optimize a video
@@ -52,6 +54,7 @@ Mode behavior:
 - default: lossless-first pipeline.
 - `-l, --losy`: lossy + lossless pass per matching compressor.
 - `-m, --mute`: remove audio tracks from video outputs (default: `true`; use `--mute false` to keep audio).
+- `-p, --preserve-exif`: preserve EXIF metadata on image outputs (default: `false`).
 - `-u, --data-url`: return optimized image as data URL (single file only; image only).
 - `-v, --verbose`: print debug logs (selected pipeline, binaries, executed commands, and errors).
 
@@ -73,6 +76,7 @@ const optimo = require('optimo')
 await optimo.file('/absolute/path/image.jpg', {
   dryRun: false,
   losy: false,
+  preserveExif: false,
   format: 'webp',
   resize: '50%',
   onLogs: console.log

@@ -10,6 +10,7 @@ Usage
 Options
   -l, --losy  Enable lossy + lossless passes (default: false)
   -m, --mute  Remove audio tracks from videos (default: true)
+  -p, --preserve-exif  Preserve EXIF metadata (default: false)
   -u, --data-url  Return optimized image as data URL (file input only)
   -d, --dry-run  Show what would be optimized without making changes
   -f, --format   Convert output format (e.g. jpeg, webp, avif)
@@ -18,6 +19,7 @@ Options
 
 Examples
   $ optimo image.jpg # optimize a single image in place
+  $ optimo image.jpg --preserve-exif # keep EXIF metadata on output image
   $ optimo image.jpg --losy # run lossy + lossless optimization passes
   $ optimo clip.mp4 --mute # optimize video and remove audio track
   $ optimo clip.mp4 --mute false # optimize video and keep audio track
