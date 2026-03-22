@@ -21,8 +21,8 @@ const runLossless = async ({ inputPath, outputPath }) =>
 const runLossy = async ({ inputPath, outputPath }) =>
   $(binaryPath, ['-O3', '--lossy=80', inputPath, '-o', outputPath])
 
-const gif = withMeta('gif', async ({ inputPath, outputPath, losy = false }) => {
-  if (!losy) return runLossless({ inputPath, outputPath })
+const gif = withMeta('gif', async ({ inputPath, outputPath, lossy = false }) => {
+  if (!lossy) return runLossless({ inputPath, outputPath })
 
   const lossyPath = `${outputPath}.lossy.gif`
   try {

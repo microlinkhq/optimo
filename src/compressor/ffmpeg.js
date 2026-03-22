@@ -67,12 +67,12 @@ const getScaleFilter = resizeConfig => {
  * - `-an`: drop audio entirely from output.
  * - `-movflags +faststart`: move MP4 metadata (moov atom) to file start for faster streaming start.
  *
- * `losy=true` intentionally picks more aggressive values for smaller files.
+ * `lossy=true` intentionally picks more aggressive values for smaller files.
  *
- * @param {{ ext: string, losy?: boolean, mute?: boolean }} params
+ * @param {{ ext: string, lossy?: boolean, mute?: boolean }} params
  * @returns {string[]}
  */
-const getCodecArgsByExt = ({ ext, losy = false, mute = true }) => {
+const getCodecArgsByExt = ({ ext, lossy = false, mute = true }) => {
   if (ext === '.webm') {
     return [
       '-c:v',
@@ -80,7 +80,7 @@ const getCodecArgsByExt = ({ ext, losy = false, mute = true }) => {
       '-b:v',
       '0',
       '-crf',
-      losy ? '35' : '31',
+      lossy ? '35' : '31',
       '-row-mt',
       '1',
       '-tile-columns',
@@ -90,10 +90,10 @@ const getCodecArgsByExt = ({ ext, losy = false, mute = true }) => {
       '-deadline',
       'good',
       '-cpu-used',
-      losy ? '2' : '1',
+      lossy ? '2' : '1',
       '-pix_fmt',
       'yuv420p',
-      ...(mute ? [] : ['-c:a', 'libopus', '-b:a', losy ? '64k' : '96k'])
+      ...(mute ? [] : ['-c:a', 'libopus', '-b:a', lossy ? '64k' : '96k'])
     ]
   }
 
@@ -102,8 +102,8 @@ const getCodecArgsByExt = ({ ext, losy = false, mute = true }) => {
       '-c:v',
       'libtheora',
       '-q:v',
-      losy ? '4' : '6',
-      ...(mute ? [] : ['-c:a', 'libvorbis', '-q:a', losy ? '3' : '4'])
+      lossy ? '4' : '6',
+      ...(mute ? [] : ['-c:a', 'libvorbis', '-q:a', lossy ? '3' : '4'])
     ]
   }
 
@@ -111,12 +111,12 @@ const getCodecArgsByExt = ({ ext, losy = false, mute = true }) => {
     '-c:v',
     'libx264',
     '-preset',
-    losy ? 'medium' : 'slow',
+    lossy ? 'medium' : 'slow',
     '-crf',
-    losy ? '28' : '23',
+    lossy ? '28' : '23',
     '-pix_fmt',
     'yuv420p',
-    ...(mute ? [] : ['-c:a', 'aac', '-b:a', losy ? '96k' : '128k']),
+    ...(mute ? [] : ['-c:a', 'aac', '-b:a', lossy ? '96k' : '128k']),
     ...(ext === '.mp4' || ext === '.m4v' || ext === '.mov'
       ? ['-movflags', '+faststart']
       : [])
@@ -134,14 +134,14 @@ const getCodecArgsByExt = ({ ext, losy = false, mute = true }) => {
  *  inputPath: string,
  *  outputPath: string,
  *  resizeConfig?: { mode: string, value: string | number } | null,
- *  losy?: boolean,
+ *  lossy?: boolean,
  *  mute?: boolean
  * }} params
  */
-const run = async ({ inputPath, outputPath, resizeConfig, losy = false, mute = true }) => {
+const run = async ({ inputPath, outputPath, resizeConfig, lossy = false, mute = true }) => {
   const ext = path.extname(outputPath).toLowerCase()
   const scaleFilter = getScaleFilter(resizeConfig)
-  const codecArgs = getCodecArgsByExt({ ext, losy, mute })
+  const codecArgs = getCodecArgsByExt({ ext, lossy, mute })
 
   await $(binaryPath, [
     '-v',

@@ -21,7 +21,7 @@ const runStepInPlaceIfSmaller = async ({ currentPath, extension, step, mute, pre
     inputPath: currentPath,
     outputPath: candidatePath,
     resizeConfig: null,
-    losy: false,
+    lossy: false,
     mute,
     preserveExif
   })
@@ -39,14 +39,14 @@ const runStepInPlaceIfSmaller = async ({ currentPath, extension, step, mute, pre
   }
 }
 
-const executePipeline = async ({ pipeline, filePath, optimizedPath, resizeConfig, losy, mute, preserveExif }) => {
+const executePipeline = async ({ pipeline, filePath, optimizedPath, resizeConfig, lossy, mute, preserveExif }) => {
   const extension = path.extname(optimizedPath) || '.tmp'
 
   await pipeline[0]({
     inputPath: filePath,
     outputPath: optimizedPath,
     resizeConfig,
-    losy,
+    lossy,
     mute,
     preserveExif
   })
@@ -57,7 +57,7 @@ const executePipeline = async ({ pipeline, filePath, optimizedPath, resizeConfig
       extension,
       mute,
       preserveExif,
-      step: async args => step({ ...args, losy, preserveExif })
+      step: async args => step({ ...args, lossy, preserveExif })
     })
   }
 
@@ -66,8 +66,10 @@ const executePipeline = async ({ pipeline, filePath, optimizedPath, resizeConfig
 
 const file = async (
   filePath,
-  { onLogs = () => {}, dryRun, format: outputFormat, resize, losy = false, mute = true, preserveExif = false, dataUrl = false } = {}
+  { onLogs = () => {}, dryRun, format: outputFormat, resize, lossy, losy, mute = true, preserveExif = false, dataUrl = false } = {}
 ) => {
+  // Keep backward compatibility with the old `losy` option key.
+  const lossyMode = lossy === undefined ? (losy === undefined ? false : losy) : lossy
   const outputPath = getOutputPath(filePath, outputFormat)
   const resizeConfig = parseResize(resize)
   const mediaKind = getMediaKind(outputPath)
@@ -77,7 +79,7 @@ const file = async (
   const outputExt = path.extname(outputPath).toLowerCase()
 
   const canUseJpegLosslessFastPath =
-    !losy &&
+    !lossyMode &&
     !resizeConfig &&
     !isConverting &&
     (outputExt === '.jpg' || outputExt === '.jpeg') &&
@@ -108,7 +110,7 @@ const file = async (
 
   const missingBinaries = ensureBinaries(
     getRequiredBinaries(executionPipeline, {
-      losy,
+      lossy: lossyMode,
       preserveExif
     })
   )
@@ -137,7 +139,7 @@ const file = async (
         filePath,
         optimizedPath,
         resizeConfig,
-        losy,
+        lossy: lossyMode,
         mute,
         preserveExif
       })

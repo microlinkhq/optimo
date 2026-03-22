@@ -13,7 +13,6 @@ const INSTALL_HINTS = {
   'mozjpegtran/jpegtran': 'brew install mozjpeg',
   'magick:jxl': 'brew install imagemagick-full && brew link --overwrite --force imagemagick-full'
 }
-const FALSE_VALUES = ['false', '0', 'no', 'off']
 
 async function main () {
   const argv = mri(process.argv.slice(2), {
@@ -21,20 +20,22 @@ async function main () {
       'data-url': 'u',
       'dry-run': 'd',
       format: 'f',
+      lossy: 'l',
       losy: 'l',
       mute: 'm',
       'preserve-exif': 'p',
       resize: 'r',
       silent: 's',
       verbose: 'v'
-    }
+    },
+    boolean: ['lossy', 'losy', 'mute', 'preserve-exif']
   })
 
   const input = argv._[0]
   const dataUrl = argv['data-url'] === true
-  const isEnabled = value => !FALSE_VALUES.includes(String(value).toLowerCase())
-  const mute = argv.mute === undefined ? true : isEnabled(argv.mute)
-  const preserveExif = argv['preserve-exif'] === undefined ? false : isEnabled(argv['preserve-exif'])
+  const lossy = argv.lossy === undefined ? argv.losy : argv.lossy
+  const mute = argv.mute === undefined ? true : argv.mute
+  const preserveExif = argv['preserve-exif'] === undefined ? false : argv['preserve-exif']
   let resize = argv.resize
 
   if (resize !== undefined && resize !== null) {
@@ -61,7 +62,7 @@ async function main () {
   !argv.silent && console.error()
 
   const result = await fn(input, {
-    losy: argv.losy,
+    lossy,
     mute,
     preserveExif,
     dryRun: argv['dry-run'],
