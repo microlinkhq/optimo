@@ -119,6 +119,22 @@ console.log(result)
 // }
 ```
 
+## Benchmark
+
+The table below compares optimo vs ImgBot:
+
+| File          | Original size |                    ImgBot size |                       Optimo size |
+| ------------- | ------------: | -----------------------------: | --------------------------------: |
+| `banner.png`  |        897 KB |      718 KB (-179 KB, -19.92%) |       718 KB (-179 KB, -19.96%) 🏆 |
+| `banner.jpg`  |        831 KB |      691 KB (-140 KB, -16.82%) |       691 KB (-140 KB, -16.83%) 🏆 |
+| `banner.gif`  |        261 KB |         257 KB (-5 KB, -1.84%) |          255 KB (-6 KB, -2.39%) 🏆 |
+| `banner.svg`  |        957 KB |          957 KB (0 KB, -0.01%) |           957 KB (0 KB, -0.02%) 🏆 |
+| `banner.webp` |        541 KB |                  not supported |         519 KB (-22 KB, -4.07%) 🏆 |
+| `banner.heic` |        398 KB |                  not supported |        304 KB (-94 KB, -23.62%) 🏆 |
+| `banner.jxl`  |         48 KB |                  not supported |           46 KB (-2 KB, -4.17%) 🏆 |
+| `banner.avif` |         20 KB |                  not supported |          17 KB (-3 KB, -15.00%) 🏆 |
+| **Total**     |  **3,953 KB** | **3,630 KB (-323 KB, -8.17%)** | **3,507 KB (-446 KB, -11.28%) 🏆** |
+
 ## License
 
 **optimo** © [Microlink](https://microlink.io), released under the [MIT](https://github.com/microlinkhq/optimo/blob/master/LICENSE.md) License.<br>
