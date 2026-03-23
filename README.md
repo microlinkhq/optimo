@@ -123,17 +123,21 @@ console.log(result)
 
 The table below compares optimo vs ImgBot:
 
-| File          | Original size |                    ImgBot size |                       Optimo size |
-| ------------- | ------------: | -----------------------------: | --------------------------------: |
-| `banner.png`  |        897 KB |      718 KB (-179 KB, -19.92%) |       718 KB (-179 KB, -19.96%) 🏆 |
-| `banner.jpg`  |        831 KB |      691 KB (-140 KB, -16.82%) |       691 KB (-140 KB, -16.83%) 🏆 |
-| `banner.gif`  |        261 KB |         257 KB (-5 KB, -1.84%) |          255 KB (-6 KB, -2.39%) 🏆 |
-| `banner.svg`  |        957 KB |          957 KB (0 KB, -0.01%) |           957 KB (0 KB, -0.02%) 🏆 |
-| `banner.webp` |        541 KB |                  not supported |         519 KB (-22 KB, -4.07%) 🏆 |
-| `banner.heic` |        398 KB |                  not supported |        304 KB (-94 KB, -23.62%) 🏆 |
-| `banner.jxl`  |         48 KB |                  not supported |           46 KB (-2 KB, -4.17%) 🏆 |
-| `banner.avif` |         20 KB |                  not supported |          17 KB (-3 KB, -15.00%) 🏆 |
-| **Total**     |  **3,953 KB** | **3,630 KB (-323 KB, -8.17%)** | **3,507 KB (-446 KB, -11.28%) 🏆** |
+| File          |  Original size |                      ImgBot size |                            Optimo size |
+| ------------- | -------------: | -------------------------------: | -------------------------------------: |
+| `banner.png`  |         897 KB |        718 KB (-179 KB, -19.92%) |            718 KB (-179 KB, -19.96%) 🏆 |
+| `banner.jpg`  |         831 KB |        691 KB (-140 KB, -16.82%) |            691 KB (-140 KB, -16.83%) 🏆 |
+| `banner.gif`  |         261 KB |           257 KB (-5 KB, -1.84%) |               255 KB (-6 KB, -2.39%) 🏆 |
+| `banner.svg`  |         957 KB |            957 KB (0 KB, -0.01%) |                957 KB (0 KB, -0.02%) 🏆 |
+| `banner.webp` |         541 KB |                                - |              519 KB (-22 KB, -4.07%) 🏆 |
+| `banner.heic` |         398 KB |                                - |             304 KB (-94 KB, -23.62%) 🏆 |
+| `banner.jxl`  |          48 KB |                                - |                46 KB (-2 KB, -4.17%) 🏆 |
+| `banner.avif` |          20 KB |                                - |               17 KB (-3 KB, -15.00%) 🏆 |
+| `banner.mp4`  |      16,552 KB |                                - |       1,877 KB (-14,675 KB, -88.65%) 🏆 |
+| `banner.mov`  |      16,552 KB |                                - |       1,877 KB (-14,675 KB, -88.65%) 🏆 |
+| `banner.mkv`  |      16,553 KB |                                - |       1,875 KB (-14,678 KB, -88.67%) 🏆 |
+| `banner.webm` |      96,983 KB |                                - |       1,167 KB (-95,816 KB, -98.79%) 🏆 |
+| **Total**     | **150,593 KB** | **150,270 KB (-323 KB, -0.21%)** | **10,303 KB (-140,290 KB, -93.16%) 🏆** |
 
 ## License
 
