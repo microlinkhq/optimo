@@ -2,6 +2,7 @@
 'use strict'
 
 const { stat } = require('node:fs/promises')
+const parseInputs = require('../src/util/parse-inputs')
 const colors = require('../src/util/colors')
 const mri = require('mri')
 
@@ -31,56 +32,54 @@ async function main () {
     boolean: ['lossy', 'losy', 'mute', 'preserve-exif']
   })
 
-  const input = argv._[0]
+  const { inputs, resize } = parseInputs(argv._, argv.resize)
   const dataUrl = argv['data-url'] === true
   const lossy = argv.lossy === undefined ? argv.losy : argv.lossy
   const mute = argv.mute === undefined ? true : argv.mute
   const preserveExif = argv['preserve-exif'] === undefined ? false : argv['preserve-exif']
-  let resize = argv.resize
 
-  if (resize !== undefined && resize !== null) {
-    const unitToken = argv._[1]
-    if (unitToken && /^[kmg]?b$/i.test(unitToken) && /^\d*\.?\d+$/.test(String(resize))) {
-      resize = `${resize}${unitToken}`
-    }
-  }
-
-  if (!input) {
+  if (inputs.length === 0) {
     console.log(require('./help'))
     process.exit(0)
+  }
+
+  if (dataUrl && inputs.length > 1) {
+    throw new TypeError('Data URL output is only supported when optimizing a single image file.')
   }
 
   if (argv.verbose) {
     process.env.DEBUG = `${process.env.DEBUG ? `${process.env.DEBUG},` : ''}optimo*`
   }
 
-  const stats = await stat(input)
-  const isDirectory = stats.isDirectory()
-  const fn = isDirectory ? require('optimo').dir : require('optimo').file
-
   const logger = argv.silent ? () => {} : logEntry => console.error(logEntry)
   !argv.silent && console.error()
 
-  const result = await fn(input, {
-    lossy,
-    mute,
-    preserveExif,
-    dryRun: argv['dry-run'],
-    dataUrl,
-    format: argv.format,
-    resize,
-    onLogs: logger
-  })
+  const missingBinaries = new Set()
 
-  if (dataUrl && result?.dataUrl) {
-    console.log(result.dataUrl)
+  for (const input of inputs) {
+    const isDirectory = (await stat(input)).isDirectory()
+    const fn = isDirectory ? require('optimo').dir : require('optimo').file
+
+    const result = await fn(input, {
+      lossy,
+      mute,
+      preserveExif,
+      dryRun: argv['dry-run'],
+      dataUrl,
+      format: argv.format,
+      resize,
+      onLogs: logger
+    })
+
+    if (dataUrl && result?.dataUrl) console.log(result.dataUrl)
+    result?.missingBinaries?.forEach(name => missingBinaries.add(name))
   }
 
-  if (result?.missingBinaries?.length > 0) {
+  if (missingBinaries.size > 0) {
     console.error()
     console.error(colors.gray('  Some files were skipped due to missing tools in the system:'))
     console.error()
-    for (const name of result.missingBinaries) {
+    for (const name of missingBinaries) {
       const hint = INSTALL_HINTS[name]
       console.error(
         colors.gray(

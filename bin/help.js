@@ -5,7 +5,7 @@ const { gray, blue } = require('../src/util/colors')
 module.exports = gray(`Efortless media optimizer
 
 Usage
-  $ ${blue('optimo')} <file|dir> [options]
+  $ ${blue('optimo')} <file|dir>… [options]
 
 Options
   -l, --lossy  Enable lossy + lossless passes (default: false)
@@ -34,4 +34,6 @@ Examples
   $ optimo image.heic -d -v # dry-run HEIC optimization with verbose logs
   $ optimo clip.mp4 # optimize a single video in place
   $ optimo clip.mov -f webm # convert MOV to WebM and optimize
+  $ optimo logo.png hero.jpg clip.mp4 # optimize several files in one run
+  $ optimo static/images # optimize every file inside a directory
 `)
