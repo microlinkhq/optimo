@@ -2,9 +2,7 @@
 
 const { execSync } = require('node:child_process')
 
-const { vendored } = require('./vendor')
-
-const systemBinary = binary => {
+module.exports = binary => {
   try {
     return execSync(`which ${binary}`, {
       stdio: ['pipe', 'pipe', 'ignore']
@@ -15,6 +13,3 @@ const systemBinary = binary => {
     return false
   }
 }
-
-module.exports = binary => systemBinary(binary) || vendored(binary)
-module.exports.system = systemBinary
