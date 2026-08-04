@@ -1,6 +1,6 @@
 'use strict'
 
-const test = require('ava')
+const test = require('ava').default
 const formatBytes = require('../../src/util/format-bytes')
 
 test('formatBytes formats values across units', t => {

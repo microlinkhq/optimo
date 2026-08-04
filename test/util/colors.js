@@ -1,6 +1,6 @@
 'use strict'
 
-const test = require('ava')
+const test = require('ava').default
 const colors = require('../../src/util/colors')
 
 test('colors helpers return strings and label uppercases text', t => {

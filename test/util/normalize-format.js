@@ -1,6 +1,6 @@
 'use strict'
 
-const test = require('ava')
+const test = require('ava').default
 const normalizeFormat = require('../../src/util/normalize-format')
 
 test('normalizeFormat normalizes extension aliases and casing', t => {

@@ -1,6 +1,6 @@
 'use strict'
 
-const test = require('ava')
+const test = require('ava').default
 const optimo = require('../src')
 
 test('file throws when dataUrl is requested for video output', async t => {

@@ -1,6 +1,6 @@
 'use strict'
 
-const test = require('ava')
+const test = require('ava').default
 const getOutputPath = require('../../src/util/get-output-path')
 
 test('getOutputPath returns original path when format is empty', t => {

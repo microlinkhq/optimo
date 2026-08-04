@@ -1,6 +1,6 @@
 'use strict'
 
-const test = require('ava')
+const test = require('ava').default
 const formatLog = require('../../src/util/format-log')
 
 test('formatLog right-aligns status and includes file path', t => {
