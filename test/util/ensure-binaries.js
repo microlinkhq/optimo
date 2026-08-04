@@ -1,6 +1,6 @@
 'use strict'
 
-const test = require('ava')
+const test = require('ava').default
 const ensureBinaries = require('../../src/util/ensure-binaries')
 
 test('ensureBinaries does not throw when all binaries are present', t => {

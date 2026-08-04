@@ -1,6 +1,6 @@
 'use strict'
 
-const test = require('ava')
+const test = require('ava').default
 const toDataUrl = require('../../src/util/to-data-url')
 
 test('toDataUrl returns data URL with mime inferred from extension', t => {

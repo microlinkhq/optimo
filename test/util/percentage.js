@@ -1,6 +1,6 @@
 'use strict'
 
-const test = require('ava')
+const test = require('ava').default
 const percentage = require('../../src/util/percentage')
 
 test('percentage returns a single decimal string', t => {

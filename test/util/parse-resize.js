@@ -1,6 +1,6 @@
 'use strict'
 
-const test = require('ava')
+const test = require('ava').default
 const parseResize = require('../../src/util/parse-resize')
 
 test('parseResize returns null for empty values', t => {

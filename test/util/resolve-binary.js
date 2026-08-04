@@ -1,6 +1,6 @@
 'use strict'
 
-const test = require('ava')
+const test = require('ava').default
 const resolveBinary = require('../../src/util/resolve-binary')
 
 test('resolveBinary resolves an existing binary and returns false for missing ones', t => {
