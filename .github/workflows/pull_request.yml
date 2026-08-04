@@ -25,8 +25,9 @@ jobs:
         uses: pnpm/action-setup@v6
         with:
           version: latest
-      - name: Install
-        run: pnpm install --dangerously-allow-all-builds
+          run_install: true
+      - name: Setup ImageMagick
+        run: ./scripts/install-imagemagick.sh
       - name: Test
         run: pnpm test
       - name: Report
