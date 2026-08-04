@@ -55,10 +55,10 @@ async function main () {
   !argv.silent && console.error()
 
   const missingBinaries = new Set()
+  const { dir, file } = require('optimo')
 
   for (const input of inputs) {
-    const isDirectory = (await stat(input)).isDirectory()
-    const fn = isDirectory ? require('optimo').dir : require('optimo').file
+    const fn = (await stat(input)).isDirectory() ? dir : file
 
     const result = await fn(input, {
       lossy,

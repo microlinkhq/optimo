@@ -1,21 +1,23 @@
 'use strict'
 
+const { mkdir, writeFile, rm } = require('node:fs/promises')
 const test = require('ava').default
+const { existsSync } = require('node:fs')
 const path = require('node:path')
 
-const { magickPath, isSupported, vendoredMagick } = require('../../src/util/vendor')
+const { ENTRYPOINTS, vendored } = require('../../src/util/vendor')
 
-test('magickPath points at the extracted AppRun inside the vendor dir', t => {
-  t.is(path.basename(magickPath()), 'AppRun')
-  t.is(path.basename(path.dirname(magickPath())), 'imagemagick')
+test('vendored returns false for a binary that is never provisioned', t => {
+  t.false(vendored('ffmpeg'))
 })
 
-test('isSupported is true only on linux-x64', t => {
-  t.is(isSupported(), process.platform === 'linux' && process.arch === 'x64')
-})
+test('vendored returns the entrypoint once it exists on disk', async t => {
+  if (existsSync(ENTRYPOINTS.magick)) return t.is(vendored('magick'), ENTRYPOINTS.magick)
 
-test('vendoredMagick returns false when nothing has been provisioned', t => {
-  // The test environment never ships a provisioned binary.
-  if (!vendoredMagick()) return t.pass()
-  t.is(vendoredMagick(), magickPath())
+  const dir = path.dirname(ENTRYPOINTS.magick)
+  await mkdir(dir, { recursive: true })
+  await writeFile(ENTRYPOINTS.magick, '')
+  t.teardown(() => rm(dir, { recursive: true, force: true }))
+
+  t.is(vendored('magick'), ENTRYPOINTS.magick)
 })

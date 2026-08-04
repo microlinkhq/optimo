@@ -2,9 +2,9 @@
 
 const { execSync } = require('node:child_process')
 
-const { vendoredMagick } = require('./vendor')
+const { vendored } = require('./vendor')
 
-module.exports = binary => {
+const systemBinary = binary => {
   try {
     return execSync(`which ${binary}`, {
       stdio: ['pipe', 'pipe', 'ignore']
@@ -12,8 +12,9 @@ module.exports = binary => {
       .toString()
       .trim()
   } catch {
-    // No system binary: fall back to a self-provisioned one when we ship it.
-    if (binary === 'magick') return vendoredMagick()
     return false
   }
 }
+
+module.exports = binary => systemBinary(binary) || vendored(binary)
+module.exports.system = systemBinary
