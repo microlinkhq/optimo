@@ -1,6 +1,6 @@
 {
   "name": "optimo",
-  "description": "The no-brainer CLI for optimizing images and videos",
+  "description": "No-brainer CLI to optimize images and videos with ImageMagick and FFmpeg defaults.",
   "homepage": "https://github.com/kikobeats/optimo",
   "version": "0.0.29",
   "exports": {
@@ -23,17 +23,16 @@
     "url": "https://github.com/kikobeats/optimo/issues"
   },
   "keywords": [
+    "cli",
+    "compression",
     "ffmpeg",
     "image",
-    "image-optimization",
-    "image-optimizer",
     "imagemagick",
-    "images",
-    "optimization",
+    "jpeg",
     "optimize",
+    "png",
     "video",
-    "video-optimization",
-    "video-optimizer"
+    "webp"
   ],
   "dependencies": {
     "debug": "~4.4.3",
