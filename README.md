@@ -165,7 +165,7 @@ The table above uses synthetic banners. The one below replays [microlinkhq/www#2
 
 ImgBot runs the same underlying tools as optimo (ImageMagick, SVGO, MozJPEG, Gifsicle), so the gap on any single file comes down to how they are driven, not to a stronger compressor.
 
-All nine PNG outputs above are pixel-identical to their inputs — `magick compare -metric AE` reports `0`. The two SVG outputs are not: SVGO's `preset-default` rounds path coordinates, which moves a small number of pixels once rasterized (`magick compare -metric AE` reports `99` of 2,304 for `magnific.svg`, and `0` for `adobe.svg`). That rounding is SVGO's default behavior and predates the transforms listed above.
+Ten of the eleven outputs above are pixel-identical to their inputs — `magick compare -metric AE` reports `0` for all nine PNGs and for `adobe.svg`. The exception is `magnific.svg`, at `99` differing pixels of 2,304: SVGO's `preset-default` rounds path coordinates, which shifts the rendered geometry slightly. That rounding is SVGO's default behavior and predates the transforms listed above.
 
 ## License
 
