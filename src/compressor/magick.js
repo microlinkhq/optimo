@@ -63,12 +63,7 @@ const MAGICK_JPEG_LOSSY_FLAGS = [
 const MAGICK_JPEG_LOSSLESS_FLAGS = ['-define', 'jpeg:optimize-coding=true', '-interlace', 'Plane']
 
 const MAGICK_PNG_LOSSLESS_FLAGS = []
-const MAGICK_PNG_LOSSY_FLAGS = [
-  '-define',
-  'png:exclude-chunks=all',
-  '-define',
-  'png:include-chunks=tRNS,gAMA'
-]
+const MAGICK_PNG_LOSSY_FLAGS = ['-define', 'png:exclude-chunks=all', '-define', 'png:include-chunks=tRNS,gAMA']
 
 const MAGICK_GIF_FLAGS = ['-coalesce', '-layers', 'OptimizePlus']
 
@@ -116,10 +111,24 @@ const isAnimatedPng = ({ filePath }) => {
   }
 }
 
+const isOpaque = ({ filePath }) => {
+  try {
+    return (
+      execFileSync(binaryPath, ['identify', '-format', '%[opaque]', `${filePath}[0]`], {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore']
+      }).trim() === 'True'
+    )
+  } catch {
+    return false
+  }
+}
+
 const writePng = async ({ inputPath, outputPath, flags, resizeGeometry }) => {
   const animated = isAnimatedPng({ filePath: inputPath })
   const writeCandidates = animated ? [90] : PNG_QUALITY_CANDIDATES
   const strategyCandidates = animated ? [null] : PNG_COMPRESSION_STRATEGY_CANDIDATES
+  const alphaFlags = !animated && isOpaque({ filePath: inputPath }) ? ['-alpha', 'off'] : []
   const candidatePaths = []
   let bestPath = null
   let bestSize = Number.POSITIVE_INFINITY
@@ -127,13 +136,16 @@ const writePng = async ({ inputPath, outputPath, flags, resizeGeometry }) => {
   try {
     for (const quality of writeCandidates) {
       for (const compressionStrategy of strategyCandidates) {
-        const candidatePath = `${outputPath}.q${quality}${compressionStrategy === null ? '' : `.s${compressionStrategy}`}.png`
+        const candidatePath = `${outputPath}.q${quality}${
+          compressionStrategy === null ? '' : `.s${compressionStrategy}`
+        }.png`
         candidatePaths.push(candidatePath)
 
         const args = [
           inputPath,
           ...(resizeGeometry ? ['-resize', resizeGeometry] : []),
           ...flags,
+          ...alphaFlags,
           ...(compressionStrategy === null ? [] : ['-define', `png:compression-strategy=${compressionStrategy}`]),
           '-quality',
           String(quality),

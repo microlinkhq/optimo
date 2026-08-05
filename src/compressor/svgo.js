@@ -15,9 +15,7 @@ const withMeta = (format, fn) => {
   return wrapped
 }
 
-const EXTRA_COMMON_PLUGINS = [
-  'cleanupListOfValues'
-]
+const EXTRA_COMMON_PLUGINS = ['cleanupListOfValues']
 
 const EXTRA_AGGRESSIVE_PLUGINS = EXTRA_COMMON_PLUGINS.concat([
   'removeAttrs',
@@ -30,22 +28,34 @@ const EXTRA_AGGRESSIVE_PLUGINS = EXTRA_COMMON_PLUGINS.concat([
   'removeXMLNS'
 ])
 
+const COLLAPSE_METADATA_TEXT_PLUGIN = `{
+  name: 'collapseMetadataText',
+  fn: () => ({
+    element: {
+      enter: node => {
+        if (node.name !== 'title' && node.name !== 'desc') return
+        for (const child of node.children) {
+          if (child.type === 'text') child.value = child.value.replace(/\\s+/g, ' ').trim()
+        }
+      }
+    }
+  })
+}`
+
 const buildConfigContent = plugins =>
-  `module.exports = ${JSON.stringify({ multipass: true, plugins: ['preset-default', ...plugins] })}\n`
+  `module.exports = { multipass: true, plugins: ['preset-default', ${plugins
+    .map(plugin => JSON.stringify(plugin))
+    .join(', ')}${plugins.length ? ', ' : ''}${COLLAPSE_METADATA_TEXT_PLUGIN}] }\n`
 
 const run = async ({ inputPath, outputPath, extraPlugins }) => {
   const configPath = `${outputPath}.svgo.config.cjs`
   try {
     await writeFile(configPath, buildConfigContent(extraPlugins))
-    await $(binaryPath, [
-      inputPath,
-      '--config',
-      configPath,
-      '--output',
-      outputPath
-    ])
+    await $(binaryPath, [inputPath, '--config', configPath, '--output', outputPath])
   } finally {
-    try { await unlink(configPath) } catch {}
+    try {
+      await unlink(configPath)
+    } catch {}
   }
 }
 
@@ -65,7 +75,9 @@ const svg = withMeta('svg', async ({ inputPath, outputPath, lossy = false }) => 
       extraPlugins: EXTRA_COMMON_PLUGINS
     })
   } finally {
-    try { await unlink(lossyPath) } catch {}
+    try {
+      await unlink(lossyPath)
+    } catch {}
   }
 })
 
