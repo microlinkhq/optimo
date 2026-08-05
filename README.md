@@ -49,6 +49,11 @@ When `optimo` is executed, a pipeline of compressors is chosen based on the outp
 - other image formats (`webp`, `avif`, `heic`, `heif`, `jxl`, etc.) -> `magick.<format>`
 - video formats (`mp4`, `m4v`, `mov`, `webm`, `mkv`, `avi`, `ogv`) -> `ffmpeg.<format>`
 
+Format-specific lossless behavior:
+
+- `.png` — an alpha channel that is fully opaque carries no information, so it is dropped before encoding. This turns RGBA into RGB (25% fewer raw bytes) with zero pixel difference. Animated PNGs are left alone.
+- `.svg` — whitespace inside `<title>` and `<desc>` is collapsed. Both hold accessibility text that is never rendered as graphics, so the text is unchanged for a reader. Whitespace inside `<text>` is never touched.
+
 Mode behavior:
 
 - default: lossless-first pipeline.
@@ -138,6 +143,27 @@ The table below compares optimo vs ImgBot:
 | `banner.mkv`  |      16,553 KB |                                - |       1,875 KB (-14,678 KB, -88.67%) 🏆 |
 | `banner.webm` |      96,983 KB |                                - |       1,167 KB (-95,816 KB, -98.79%) 🏆 |
 | **Total**     | **150,593 KB** | **150,270 KB (-323 KB, -0.21%)** | **10,303 KB (-140,290 KB, -93.16%) 🏆** |
+
+### Head-to-head on real assets
+
+The table above uses synthetic banners. The one below replays [microlinkhq/www#2183](https://github.com/microlinkhq/www/pull/2183), an ImgBot PR against a production site, and runs optimo on the exact same inputs. ImgBot's column reproduces the numbers from its own PR body.
+
+| File | Original | ImgBot | optimo |
+| ---- | -------: | -----: | -----: |
+| `icons/costless.png` | 857,820 B | 763,258 B (-11.02%) | 763,082 B (-11.04%) 🏆 |
+| `icons/cloud2.png` | 890,832 B | 794,240 B (-10.84%) | 794,064 B (-10.86%) 🏆 |
+| `icons/programmable.png` | 889,264 B | 793,811 B (-10.73%) | 793,635 B (-10.75%) 🏆 |
+| `icons/declarative.png` | 1,012,287 B | 914,434 B (-9.67%) | 914,258 B (-9.68%) 🏆 |
+| `icons/developer.png` | 972,827 B | 878,894 B (-9.66%) | 878,718 B (-9.67%) 🏆 |
+| `icons/cdn.png` | 1,044,729 B | 947,696 B (-9.29%) | 947,520 B (-9.30%) 🏆 |
+| `icons/security.png` | 1,099,363 B | 997,970 B (-9.22%) | 997,794 B (-9.24%) 🏆 |
+| `icons/hardware.png` | 1,408,313 B | 1,305,076 B (-7.33%) | 1,304,900 B (-7.34%) 🏆 |
+| `gmail-bimi-brand-logo.png` | 423,636 B | 396,862 B (-6.32%) | 387,643 B (-8.50%) 🏆 |
+| `use-cases/magnific.svg` | 377 B | 367 B (-2.65%) | 262 B (-30.50%) 🏆 |
+| `bimi/adobe.svg` | 341 B | 340 B (-0.29%) | 340 B (-0.29%) 🤝 |
+| **Total** | **8,599,789 B** | **7,792,948 B (-9.38%)** | **7,782,216 B (-9.51%)** 🏆 |
+
+ImgBot runs the same underlying tools as optimo (ImageMagick, SVGO, MozJPEG, Gifsicle), so the gap on any single file comes down to how they are driven, not to a stronger compressor. Both results above are lossless: every output is pixel-identical to its input under `magick compare -metric AE`.
 
 ## License
 
