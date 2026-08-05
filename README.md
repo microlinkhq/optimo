@@ -51,8 +51,8 @@ When `optimo` is executed, a pipeline of compressors is chosen based on the outp
 
 Format-specific lossless behavior:
 
-- `.png` — an alpha channel that is fully opaque carries no information, so it is dropped before encoding. This turns RGBA into RGB (25% fewer raw bytes) with zero pixel difference. Animated PNGs are left alone.
-- `.svg` — whitespace inside `<title>` and `<desc>` is collapsed. Both hold accessibility text that is never rendered as graphics, so the text is unchanged for a reader. Whitespace inside `<text>` is never touched.
+- `.png` — an alpha channel that is fully opaque carries no information, so it is dropped before encoding. This turns RGBA into RGB (25% fewer raw bytes) with zero pixel difference. Animated PNGs are still optimized; only this opaque-alpha removal is skipped for them.
+- `.svg` — runs of whitespace inside `<title>` and `<desc>` are collapsed to a single space. This normalizes their text content; neither element is rendered as graphics, so the drawing is unaffected. Whitespace inside `<text>` is never touched.
 
 Mode behavior:
 
@@ -163,7 +163,9 @@ The table above uses synthetic banners. The one below replays [microlinkhq/www#2
 | `bimi/adobe.svg` | 341 B | 340 B (-0.29%) | 340 B (-0.29%) 🤝 |
 | **Total** | **8,599,789 B** | **7,792,948 B (-9.38%)** | **7,782,216 B (-9.51%)** 🏆 |
 
-ImgBot runs the same underlying tools as optimo (ImageMagick, SVGO, MozJPEG, Gifsicle), so the gap on any single file comes down to how they are driven, not to a stronger compressor. Both results above are lossless: every output is pixel-identical to its input under `magick compare -metric AE`.
+ImgBot runs the same underlying tools as optimo (ImageMagick, SVGO, MozJPEG, Gifsicle), so the gap on any single file comes down to how they are driven, not to a stronger compressor.
+
+All nine PNG outputs above are pixel-identical to their inputs — `magick compare -metric AE` reports `0`. The two SVG outputs are not: SVGO's `preset-default` rounds path coordinates, which moves a small number of pixels once rasterized (`magick compare -metric AE` reports `99` of 2,304 for `magnific.svg`, and `0` for `adobe.svg`). That rounding is SVGO's default behavior and predates the transforms listed above.
 
 ## License
 
